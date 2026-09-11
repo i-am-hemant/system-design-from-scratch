@@ -10,22 +10,25 @@ issue even if you don't have a fix.
 
 Decide which type it is, because forcing the wrong shape produces bad material:
 
-- **Build** — the topic is a genuine algorithm you can implement in a few hundred lines. Hash
-  rings, rate limiters, bloom filters, LRU caches, write-ahead logs, leader election, circuit
-  breakers, gossip, merkle trees.
+- **Concept** — the default, and what most lessons should be. The idea matters; hand-writing the
+  mechanism does not. Explain it in pseudocode, show the measurement, hand over a script the
+  reader can change. Consistent hashing, indexing, quorums, percentiles, bloom filters.
+- **Build** — writing the mechanism *is* the insight, so a step-by-step section earns its place.
+  Raft, leader election, rate limiting under real concurrency, write-ahead logs. Six of the
+  forty-nine planned lessons. If you can't say what the act of typing it teaches, use Concept.
 - **Simulate** — the real system is too big to build, but you can model its behaviour and
   measure. Cache hit ratios under skewed load, replication lag versus write latency, queue depth
   under backpressure.
 - **Design** — the answer is judgement. Ships a brief, a rubric with checkboxes, a traps table,
   and a reference direction that is explicitly *a* good answer rather than *the* answer.
 
-If you're about to write Go that only exists so the lesson has code in it, it should be a
-Simulate or Design lesson instead.
+If you're about to write code that only exists so the lesson has code in it, stop. Every script
+here exists to produce a number the doc quotes — nothing else.
 
 ## Workflow
 
 ```bash
-scripts/scaffold_lesson.sh 01-foundations 04-rate-limiting "Rate Limiting" build
+scripts/scaffold_lesson.sh 01-foundations 04-rate-limiting "Rate Limiting" concept
 # write code first, get the measurement, then write the doc around it
 python3 scripts/audit_lessons.py --run-tests
 node scripts/serve.js        # preview at http://localhost:8080
@@ -41,24 +44,29 @@ by; you can't know what that is until you've run it.
 
 ## What CI enforces
 
-- `gofmt` clean
-- `go vet` and `go test` pass in every lesson's module
+- Every lesson's `python3 -m unittest discover` passes
 - Lesson structure: required sections for the declared type
-- **Every backticked Go identifier in a doc exists in that lesson's code**
-- **Every `go test`/`go run` command quoted in a doc actually runs**
+- **Numbers quoted in a doc's output blocks match what the script prints today**
+- **Every backticked identifier in a doc exists in that lesson's code**
+- **Every `python3` command quoted in a doc actually runs**
+- Code is stdlib-only — a third-party import fails the audit
 - `quiz.json` parses and every `correct` index is in range
-- Relative links resolve
-- Design exercises have a rubric with checkboxes
+- Relative links resolve; design exercises have a rubric with checkboxes
+- The built site is not stale
 
-That fourth and fifth item are the interesting ones. They're why a doc can't drift from its code.
+The third item is the one that matters. Edit `hashring.py` so the churn figure changes, forget to
+update the doc, and CI tells you which row went stale. Without it, "no claim without a number"
+would decay into "no claim without a number that was true once."
 
 ## Standards for code
 
-- **No dependencies** beyond the Go standard library. A reader should clone and run.
+- **Standard library only.** A reader should clone and run with no install step. The audit
+  enforces this; if you genuinely need a dependency, the lesson design is probably wrong.
 - **No narrating comments.** Don't write `// loop over nodes`. Do write why this hash function,
   why skip on collision, what's part of the contract.
 - **Tests assert the teaching.** Alongside correctness tests, include at least one named for the
-  property the lesson exists to demonstrate — `TestRingBeatsModuloByAtLeast2x`, not `TestRing2`.
+  property the lesson exists to demonstrate — `test_ring_beats_modulo_by_at_least_2x`, not
+  `test_ring_2`. When it fails, the message should name the *idea* that died.
 - **Thresholds come from measurement.** Run the thing, see the real number, then assert against
   it with sensible headroom. Don't assert an idealised value and tune until it passes.
 

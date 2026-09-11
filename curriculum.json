@@ -1,20 +1,56 @@
 {
-  "$comment": "Planned curriculum outline. Lessons listed here but absent from phases/ render as 'planned' on the site rather than as links — the site can never claim a lesson that does not exist. Written lessons are discovered from disk and override these entries.",
+  "$comment": "Planned curriculum outline. Lessons listed here but absent from phases/ render as 'planned' on the site rather than as links \u2014 the site can never claim a lesson that does not exist. Written lessons are discovered from disk and override these entries.",
   "phases": [
     {
       "slug": "01-foundations",
       "title": "Foundations",
       "summary": "The vocabulary and the arithmetic. What the properties mean, what they cost, and the primitives that show up in every later phase.",
       "lessons": [
-        { "slug": "01-why-system-design", "title": "Why System Design Is a Separate Skill", "type": "design" },
-        { "slug": "02-estimation", "title": "Back-of-Envelope Estimation", "type": "build" },
-        { "slug": "03-consistent-hashing", "title": "Consistent Hashing", "type": "build" },
-        { "slug": "04-rate-limiting", "title": "Rate Limiting: Token Bucket to Sliding Window", "type": "build" },
-        { "slug": "05-caching-strategies", "title": "Caching Strategies and Eviction", "type": "build" },
-        { "slug": "06-backpressure", "title": "Backpressure and Load Shedding", "type": "build" },
-        { "slug": "07-circuit-breakers", "title": "Circuit Breakers", "type": "build" },
-        { "slug": "08-bloom-filters", "title": "Bloom Filters", "type": "build" },
-        { "slug": "09-latency-percentiles", "title": "Why p99 Is Not an Average", "type": "simulate" }
+        {
+          "slug": "01-why-system-design",
+          "title": "Why System Design Is a Separate Skill",
+          "type": "design"
+        },
+        {
+          "slug": "02-estimation",
+          "title": "Back-of-Envelope Estimation",
+          "type": "concept"
+        },
+        {
+          "slug": "03-consistent-hashing",
+          "title": "Consistent Hashing",
+          "type": "concept"
+        },
+        {
+          "slug": "04-rate-limiting",
+          "title": "Rate Limiting: Token Bucket to Sliding Window",
+          "type": "build"
+        },
+        {
+          "slug": "05-caching-strategies",
+          "title": "Caching Strategies and Eviction",
+          "type": "concept"
+        },
+        {
+          "slug": "06-backpressure",
+          "title": "Backpressure and Load Shedding",
+          "type": "concept"
+        },
+        {
+          "slug": "07-circuit-breakers",
+          "title": "Circuit Breakers",
+          "type": "concept"
+        },
+        {
+          "slug": "08-bloom-filters",
+          "title": "Bloom Filters",
+          "type": "concept"
+        },
+        {
+          "slug": "09-latency-percentiles",
+          "title": "Why p99 Is Not an Average",
+          "type": "simulate"
+        }
       ]
     },
     {
@@ -22,12 +58,36 @@
       "title": "Networking and Routing",
       "summary": "How a request finds a server, and what happens when the server it finds is the wrong one.",
       "lessons": [
-        { "slug": "01-load-balancing-algorithms", "title": "Load Balancing: Round Robin to Power of Two Choices", "type": "build" },
-        { "slug": "02-health-checking", "title": "Health Checks and Outlier Detection", "type": "build" },
-        { "slug": "03-service-discovery", "title": "Service Discovery", "type": "build" },
-        { "slug": "04-stateless-services", "title": "Stateless Service Design", "type": "design" },
-        { "slug": "05-retries-and-timeouts", "title": "Retries, Timeouts and Deadline Propagation", "type": "build" },
-        { "slug": "06-cdn", "title": "CDNs and Edge Caching", "type": "simulate" }
+        {
+          "slug": "01-load-balancing-algorithms",
+          "title": "Load Balancing: Round Robin to Power of Two Choices",
+          "type": "concept"
+        },
+        {
+          "slug": "02-health-checking",
+          "title": "Health Checks and Outlier Detection",
+          "type": "concept"
+        },
+        {
+          "slug": "03-service-discovery",
+          "title": "Service Discovery",
+          "type": "concept"
+        },
+        {
+          "slug": "04-stateless-services",
+          "title": "Stateless Service Design",
+          "type": "design"
+        },
+        {
+          "slug": "05-retries-and-timeouts",
+          "title": "Retries, Timeouts and Deadline Propagation",
+          "type": "concept"
+        },
+        {
+          "slug": "06-cdn",
+          "title": "CDNs and Edge Caching",
+          "type": "simulate"
+        }
       ]
     },
     {
@@ -35,13 +95,41 @@
       "title": "Data and Storage",
       "summary": "Where state lives, how it survives a crash, and what you give up to make it fast.",
       "lessons": [
-        { "slug": "01-write-ahead-log", "title": "Write-Ahead Logs", "type": "build" },
-        { "slug": "02-b-tree-vs-lsm", "title": "B-Trees versus LSM Trees", "type": "build" },
-        { "slug": "03-indexing", "title": "Indexes and Query Cost", "type": "simulate" },
-        { "slug": "04-replication", "title": "Replication and Replica Lag", "type": "simulate" },
-        { "slug": "05-partitioning", "title": "Partitioning and Rebalancing", "type": "build" },
-        { "slug": "06-transactions", "title": "Transactions and Isolation Levels", "type": "build" },
-        { "slug": "07-picking-a-database", "title": "Choosing a Datastore", "type": "design" }
+        {
+          "slug": "01-write-ahead-log",
+          "title": "Write-Ahead Logs",
+          "type": "build"
+        },
+        {
+          "slug": "02-b-tree-vs-lsm",
+          "title": "B-Trees versus LSM Trees",
+          "type": "concept"
+        },
+        {
+          "slug": "03-indexing",
+          "title": "Indexes and Query Cost",
+          "type": "simulate"
+        },
+        {
+          "slug": "04-replication",
+          "title": "Replication and Replica Lag",
+          "type": "simulate"
+        },
+        {
+          "slug": "05-partitioning",
+          "title": "Partitioning and Rebalancing",
+          "type": "concept"
+        },
+        {
+          "slug": "06-transactions",
+          "title": "Transactions and Isolation Levels",
+          "type": "concept"
+        },
+        {
+          "slug": "07-picking-a-database",
+          "title": "Choosing a Datastore",
+          "type": "design"
+        }
       ]
     },
     {
@@ -49,14 +137,46 @@
       "title": "Distributed Systems",
       "summary": "What breaks once one machine becomes several, and the algorithms that make disagreement survivable.",
       "lessons": [
-        { "slug": "01-failure-modes", "title": "How Distributed Systems Actually Fail", "type": "simulate" },
-        { "slug": "02-logical-clocks", "title": "Logical and Vector Clocks", "type": "build" },
-        { "slug": "03-quorums", "title": "Quorums and Tunable Consistency", "type": "build" },
-        { "slug": "04-leader-election", "title": "Leader Election", "type": "build" },
-        { "slug": "05-raft", "title": "Raft: Log Replication from Scratch", "type": "build" },
-        { "slug": "06-gossip", "title": "Gossip Protocols", "type": "build" },
-        { "slug": "07-merkle-trees", "title": "Merkle Trees and Anti-Entropy", "type": "build" },
-        { "slug": "08-cap-in-practice", "title": "CAP Beyond the Triangle", "type": "design" }
+        {
+          "slug": "01-failure-modes",
+          "title": "How Distributed Systems Actually Fail",
+          "type": "simulate"
+        },
+        {
+          "slug": "02-logical-clocks",
+          "title": "Logical and Vector Clocks",
+          "type": "concept"
+        },
+        {
+          "slug": "03-quorums",
+          "title": "Quorums and Tunable Consistency",
+          "type": "concept"
+        },
+        {
+          "slug": "04-leader-election",
+          "title": "Leader Election",
+          "type": "build"
+        },
+        {
+          "slug": "05-raft",
+          "title": "Raft: Log Replication from Scratch",
+          "type": "build"
+        },
+        {
+          "slug": "06-gossip",
+          "title": "Gossip Protocols",
+          "type": "build"
+        },
+        {
+          "slug": "07-merkle-trees",
+          "title": "Merkle Trees and Anti-Entropy",
+          "type": "concept"
+        },
+        {
+          "slug": "08-cap-in-practice",
+          "title": "CAP Beyond the Triangle",
+          "type": "design"
+        }
       ]
     },
     {
@@ -64,12 +184,36 @@
       "title": "Messaging and Streams",
       "summary": "Decoupling components in time, and the delivery guarantees you can actually buy.",
       "lessons": [
-        { "slug": "01-queues-vs-logs", "title": "Queues versus Append-Only Logs", "type": "build" },
-        { "slug": "02-delivery-semantics", "title": "At-Most-Once, At-Least-Once, Exactly-Once", "type": "build" },
-        { "slug": "03-idempotency", "title": "Idempotency Keys and Deduplication", "type": "build" },
-        { "slug": "04-outbox-pattern", "title": "The Transactional Outbox", "type": "build" },
-        { "slug": "05-consumer-groups", "title": "Consumer Groups and Partition Assignment", "type": "build" },
-        { "slug": "06-stream-processing", "title": "Windowing and Late Data", "type": "simulate" }
+        {
+          "slug": "01-queues-vs-logs",
+          "title": "Queues versus Append-Only Logs",
+          "type": "concept"
+        },
+        {
+          "slug": "02-delivery-semantics",
+          "title": "At-Most-Once, At-Least-Once, Exactly-Once",
+          "type": "concept"
+        },
+        {
+          "slug": "03-idempotency",
+          "title": "Idempotency Keys and Deduplication",
+          "type": "build"
+        },
+        {
+          "slug": "04-outbox-pattern",
+          "title": "The Transactional Outbox",
+          "type": "concept"
+        },
+        {
+          "slug": "05-consumer-groups",
+          "title": "Consumer Groups and Partition Assignment",
+          "type": "concept"
+        },
+        {
+          "slug": "06-stream-processing",
+          "title": "Windowing and Late Data",
+          "type": "simulate"
+        }
       ]
     },
     {
@@ -77,11 +221,31 @@
       "title": "Operating in Production",
       "summary": "The properties you only discover after launch: observability, cost, and the failure you did not plan for.",
       "lessons": [
-        { "slug": "01-observability", "title": "Metrics, Logs and Traces", "type": "build" },
-        { "slug": "02-slos", "title": "SLOs and Error Budgets", "type": "build" },
-        { "slug": "03-capacity-and-cost", "title": "Capacity Planning and Cost Modelling", "type": "simulate" },
-        { "slug": "04-deployment-strategies", "title": "Blue-Green, Canary and Feature Flags", "type": "design" },
-        { "slug": "05-incident-response", "title": "Debugging a System You Did Not Design", "type": "design" }
+        {
+          "slug": "01-observability",
+          "title": "Metrics, Logs and Traces",
+          "type": "concept"
+        },
+        {
+          "slug": "02-slos",
+          "title": "SLOs and Error Budgets",
+          "type": "concept"
+        },
+        {
+          "slug": "03-capacity-and-cost",
+          "title": "Capacity Planning and Cost Modelling",
+          "type": "simulate"
+        },
+        {
+          "slug": "04-deployment-strategies",
+          "title": "Blue-Green, Canary and Feature Flags",
+          "type": "design"
+        },
+        {
+          "slug": "05-incident-response",
+          "title": "Debugging a System You Did Not Design",
+          "type": "design"
+        }
       ]
     },
     {
@@ -89,14 +253,46 @@
       "title": "Real-World Systems",
       "summary": "Full designs where constraints conflict and something has to give. Each one names what it sacrifices.",
       "lessons": [
-        { "slug": "01-url-shortener", "title": "Design a URL Shortener", "type": "design" },
-        { "slug": "02-rate-limiter-service", "title": "Design a Distributed Rate Limiter", "type": "design" },
-        { "slug": "03-news-feed", "title": "Design a News Feed", "type": "design" },
-        { "slug": "04-chat-system", "title": "Design a Chat System", "type": "design" },
-        { "slug": "05-object-storage", "title": "Design an Object Store", "type": "design" },
-        { "slug": "06-search", "title": "Design Search and Autocomplete", "type": "design" },
-        { "slug": "07-payment-ledger", "title": "Design a Payment Ledger", "type": "design" },
-        { "slug": "08-video-streaming", "title": "Design Video Streaming", "type": "design" }
+        {
+          "slug": "01-url-shortener",
+          "title": "Design a URL Shortener",
+          "type": "design"
+        },
+        {
+          "slug": "02-rate-limiter-service",
+          "title": "Design a Distributed Rate Limiter",
+          "type": "design"
+        },
+        {
+          "slug": "03-news-feed",
+          "title": "Design a News Feed",
+          "type": "design"
+        },
+        {
+          "slug": "04-chat-system",
+          "title": "Design a Chat System",
+          "type": "design"
+        },
+        {
+          "slug": "05-object-storage",
+          "title": "Design an Object Store",
+          "type": "design"
+        },
+        {
+          "slug": "06-search",
+          "title": "Design Search and Autocomplete",
+          "type": "design"
+        },
+        {
+          "slug": "07-payment-ledger",
+          "title": "Design a Payment Ledger",
+          "type": "design"
+        },
+        {
+          "slug": "08-video-streaming",
+          "title": "Design Video Streaming",
+          "type": "design"
+        }
       ]
     }
   ]

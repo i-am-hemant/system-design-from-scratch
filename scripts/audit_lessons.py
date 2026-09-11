@@ -3,20 +3,23 @@
 
     python3 scripts/audit_lessons.py
     python3 scripts/audit_lessons.py --phase 1
-    python3 scripts/audit_lessons.py --run-tests   # also execute each lesson's Go tests
+    python3 scripts/audit_lessons.py --run-tests   # also run each lesson's tests and doc commands
 
 Checks, in rough order of how much they matter:
 
   1. Directory naming follows NN-slug
   2. docs/en.md exists and carries the required sections for its lesson type
-  3. Build lessons have code/ with at least one _test.go
-  4. Every Go identifier the doc quotes in backticks actually exists in the code
-  5. Every `go test`/`go run` command quoted in the doc is runnable
-  6. quiz.json parses, and every question's `correct` index is in range
-  7. Design exercises carry a rubric and a traps section
-  8. Relative links inside docs resolve to real files
+  3. Lessons with code have code/ and at least one test_*.py, stdlib-only
+  4. Every identifier the doc quotes in backticks actually exists in the code
+  5. Numbers quoted in the doc's output blocks match what the script prints today
+  6. Every python3 command quoted in the doc is runnable
+  7. quiz.json parses, and every question's `correct` index is in range
+  8. Design exercises carry a rubric and a traps section
+  9. Relative links inside docs resolve to real files
 
-Check 4 is the one that matters most: it is how a lesson stops claiming an API it does not have.
+Check 5 is the one that matters most. The curriculum's whole premise is that no claim
+appears without a number the lesson produced; a doc holding stale figures breaks that
+silently, and nothing else would catch it.
 """
 
 from __future__ import annotations
@@ -35,11 +38,21 @@ PHASES = REPO / "phases"
 LESSON_DIR_RE = re.compile(r"^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 # Sections every lesson needs, by declared type.
+#
+# 'concept' is the default shape: explain the idea, show the measurement, hand over
+# a script to run, then exercise judgement. 'build' is reserved for the few lessons
+# where writing the mechanism IS the insight — Raft, rate limiting under real
+# concurrency — and adds a step-by-step section. Most lessons should be 'concept'.
 REQUIRED_SECTIONS = {
+    "concept": [
+        "## Learning objectives",
+        "## Run it",
+        "## Exercises",
+        "## Key terms",
+        "## Further reading",
+    ],
     "build": [
         "## Learning objectives",
-        "## The problem",
-        "## The concept",
         "## Build it",
         "## Run it",
         "## Exercises",
@@ -48,8 +61,6 @@ REQUIRED_SECTIONS = {
     ],
     "simulate": [
         "## Learning objectives",
-        "## The problem",
-        "## The concept",
         "## Run it",
         "## Exercises",
         "## Key terms",
@@ -128,9 +139,12 @@ def check_doc(audit: Audit, lesson: Path) -> tuple[str, str] | None:
         audit.error(lesson, f"unknown lesson type {ltype!r}; expected build/simulate/design")
         return text, "build"
 
+    # Headings may be numbered ("## 5. Run it") or plain ("## Run it"); both count.
     for section in REQUIRED_SECTIONS[ltype]:
         audit.checks_run += 1
-        if section.lower() not in text.lower():
+        name = section.removeprefix("## ").strip()
+        pattern = rf"^##\s+(?:\d+\.\s*)?{re.escape(name)}\s*$"
+        if not re.search(pattern, text, re.M | re.I):
             audit.error(lesson, f"[{ltype}] missing required section {section!r}")
 
     if len(text.split()) < 400:
@@ -147,16 +161,35 @@ def check_code(audit: Audit, lesson: Path, ltype: str) -> None:
     if not code.is_dir():
         audit.error(lesson, f"[{ltype}] missing code/ directory")
         return
-    go_files = list(code.rglob("*.go"))
-    if not go_files:
-        audit.error(lesson, "code/ contains no .go files")
+    py_files = [f for f in code.rglob("*.py") if "__pycache__" not in f.parts]
+    if not py_files:
+        audit.error(lesson, "code/ contains no .py files")
         return
-    if not any(f.name.endswith("_test.go") for f in go_files):
-        audit.error(lesson, "code/ has no _test.go — every build lesson must be verifiable")
+    if not any(f.name.startswith("test_") for f in py_files):
+        audit.error(lesson, "code/ has no test_*.py — every claim must be verifiable")
+
+    # Lessons must run on a bare interpreter. A third-party import silently raises
+    # the cost of running the lesson from "python3 file.py" to "set up an env".
+    stdlib_ok = {
+        "bisect", "zlib", "hashlib", "math", "random", "statistics", "time",
+        "collections", "itertools", "dataclasses", "typing", "json", "os", "sys",
+        "unittest", "heapq", "threading", "queue", "socket", "struct", "enum",
+        "functools", "abc", "argparse", "csv", "datetime", "re", "textwrap",
+        "concurrent", "asyncio", "contextlib", "io", "pathlib", "__future__",
+    }
+    for f in py_files:
+        for m in re.finditer(r"^\s*(?:from|import)\s+([a-zA-Z_][\w]*)", f.read_text("utf-8"), re.M):
+            mod = m.group(1)
+            local = (code / f"{mod}.py").exists()
+            if mod not in stdlib_ok and not local:
+                audit.checks_run += 1
+                audit.error(
+                    lesson, f"{f.name} imports third-party {mod!r}; lessons must be stdlib-only"
+                )
 
 
 def check_doc_claims_match_code(audit: Audit, lesson: Path, text: str) -> None:
-    """Every exported Go identifier the doc quotes must exist in the lesson's code.
+    """Every function or class the doc quotes in backticks must exist in the code.
 
     This is the check that keeps a lesson from describing an API it never wrote.
     """
@@ -165,21 +198,79 @@ def check_doc_claims_match_code(audit: Audit, lesson: Path, text: str) -> None:
     if not code.is_dir():
         return
     source = "\n".join(
-        f.read_text(encoding="utf-8") for f in code.rglob("*.go")
+        f.read_text(encoding="utf-8")
+        for f in code.rglob("*.py")
+        if "__pycache__" not in f.parts
     )
     if not source:
         return
 
-    # Backticked CamelCase identifiers, optionally with a call suffix.
+    defined = set(re.findall(r"^\s*(?:def|class)\s+(\w+)", source, re.M))
+    defined |= set(re.findall(r"^\s*(\w+)\s*=", source, re.M))
+
+    # Backticked names that look like code: CamelCase types, or snake_case with a
+    # call suffix. Bare snake_case words are too often prose to check safely.
     claimed = set(re.findall(r"`([A-Z][A-Za-z0-9]{2,})(?:\(\))?`", text))
-    # Words that are prose, not identifiers.
+    claimed |= set(re.findall(r"`([a-z_][a-z0-9_]{2,})\(\)`", text))
+
     ignore = {
         "CRC", "TTL", "RAM", "API", "HTTP", "JSON", "YAML", "SPREAD", "MODULO",
-        "CHANGE", "IDEAL", "REPLICAS", "VERDICT", "Inf", "MIT", "DNS", "AOF",
+        "CHANGE", "IDEAL", "REPLICAS", "VERDICT", "MIT", "DNS", "AOF", "GIL",
+        "DynamoDB", "Cassandra", "Memcached", "Envoy", "Riak", "Voldemort",
+        "Google", "Amazon", "Apache", "Dynamo", "NONE", "None", "Type",
+        "Prerequisites", "Time", "But",
     }
     for name in sorted(claimed - ignore):
-        if not re.search(rf"\b{re.escape(name)}\b", source):
+        if name not in defined and not re.search(rf"\b{re.escape(name)}\b", source):
             audit.error(lesson, f"doc references `{name}` which is absent from code/")
+
+
+def check_doc_output_is_current(audit: Audit, lesson: Path, text: str, run: bool) -> None:
+    """The strongest check here: numbers printed in the doc must match a real run.
+
+    A lesson's authority rests on its measurements. If someone changes the code and
+    the doc keeps yesterday's figures, every claim silently becomes fiction. So take
+    the numeric rows quoted in the doc's output blocks and require the script to
+    still print them.
+    """
+    if not run:
+        return
+    code = lesson / "code"
+    main = code / "hashring.py"
+    if not main.is_file():
+        return
+
+    # Output blocks are fenced code blocks the doc presents as program output.
+    # Only fenced blocks, and only rows that look like tabular program output:
+    # a label followed by two or more percentages. Prose citing the same figures is
+    # deliberately excluded — it is reworded often and would produce false failures.
+    blocks = re.findall(r"^```[a-z]*\n(.*?)^```", text, re.S | re.M)
+    quoted_rows = []
+    for block in blocks:
+        for line in block.splitlines():
+            if len(re.findall(r"\d+\.\d%", line)) >= 2 and not line.lstrip().startswith(">"):
+                quoted_rows.append(line.strip())
+    if not quoted_rows:
+        return
+
+    audit.checks_run += 1
+    proc = subprocess.run(
+        [sys.executable, main.name], cwd=code, capture_output=True, text=True, timeout=600
+    )
+    if proc.returncode != 0:
+        audit.error(lesson, f"{main.name} failed to run: {proc.stderr.strip()[:200]}")
+        return
+    actual = " ".join(proc.stdout.split())
+
+    for row in quoted_rows:
+        audit.checks_run += 1
+        if " ".join(row.split()) not in actual:
+            audit.error(
+                lesson,
+                f"doc quotes output that the code no longer produces:\n"
+                f"      {row}\n"
+                f"      re-run 'python3 code/{main.name}' and update docs/en.md",
+            )
 
 
 def check_doc_commands_run(audit: Audit, lesson: Path, text: str, run: bool) -> None:
@@ -188,11 +279,12 @@ def check_doc_commands_run(audit: Audit, lesson: Path, text: str, run: bool) -> 
     code = lesson / "code"
     if not code.is_dir():
         return
-    cmds = re.findall(r"^(go (?:test|run|vet)[^\n#]*)", text, re.M)
+    cmds = re.findall(r"^(python3 -m unittest[^\n#]*|python3 [\w./]+\.py[^\n#]*)", text, re.M)
     for cmd in sorted({c.strip() for c in cmds}):
         audit.checks_run += 1
+        # Docs quote paths relative to the lesson root; run them from there.
         proc = subprocess.run(
-            cmd, shell=True, cwd=code, capture_output=True, text=True, timeout=600
+            cmd, shell=True, cwd=lesson, capture_output=True, text=True, timeout=600
         )
         if proc.returncode != 0:
             tail = (proc.stderr or proc.stdout).strip().splitlines()[-3:]
@@ -276,6 +368,7 @@ def audit_lesson(audit: Audit, lesson: Path, run_tests: bool) -> None:
     text, ltype = result
     check_code(audit, lesson, ltype)
     check_doc_claims_match_code(audit, lesson, text)
+    check_doc_output_is_current(audit, lesson, text, run_tests)
     check_doc_commands_run(audit, lesson, text, run_tests)
     check_quiz(audit, lesson)
     check_design(audit, lesson)

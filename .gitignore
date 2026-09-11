@@ -1,13 +1,4 @@
-# Go
-*.exe
-*.test
-*.out
-/vendor/
-
-# Editors
-.vscode/
-.idea/
-*.swp
-
-# macOS
+__pycache__/
+*.pyc
 .DS_Store
+node_modules/

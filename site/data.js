@@ -8,7 +8,7 @@ window.CURRICULUM = {
     "withTests": 1,
     "designExercises": 1,
     "quizQuestions": 6,
-    "words": 2266,
+    "words": 1927,
     "generated": "2026-09-11"
   },
   "phases": [
@@ -31,7 +31,7 @@ window.CURRICULUM = {
           "slug": "02-estimation",
           "num": 2,
           "title": "Back-of-Envelope Estimation",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -42,42 +42,42 @@ window.CURRICULUM = {
           "num": 3,
           "title": "Consistent Hashing",
           "hook": "Adding one server to a modulo-hashed cache moves 81% of your keys. A hash ring moves 20%. Same hardware, same request, one line of different arithmetic.",
-          "type": "build",
-          "language": "Go",
-          "time": "~75 minutes",
-          "prerequisites": "Lesson 01 (why system design), Lesson 02 (requirements and estimation)",
+          "type": "concept",
+          "language": null,
+          "time": "~45 minutes",
+          "prerequisites": "Lesson 01 (why system design), Lesson 02 (estimation)",
           "sections": [
             {
               "title": "Learning objectives",
               "id": "learning-objectives"
             },
             {
-              "title": "The problem",
-              "id": "the-problem"
+              "title": "1. The problem",
+              "id": "1-the-problem"
             },
             {
-              "title": "The concept",
-              "id": "the-concept"
+              "title": "2. The idea",
+              "id": "2-the-idea"
             },
             {
-              "title": "Build it",
-              "id": "build-it"
+              "title": "3. Why the churn is 1/N",
+              "id": "3-why-the-churn-is-1n"
             },
             {
-              "title": "Run it",
-              "id": "run-it"
+              "title": "4. Virtual nodes, and why they are not optional",
+              "id": "4-virtual-nodes-and-why-they-are-not-optional"
             },
             {
-              "title": "Use it",
-              "id": "use-it"
+              "title": "5. Run it",
+              "id": "5-run-it"
             },
             {
-              "title": "Ship it",
-              "id": "ship-it"
+              "title": "6. Use it",
+              "id": "6-use-it"
             },
             {
-              "title": "What consistent hashing does *not* solve",
-              "id": "what-consistent-hashing-does-not-solve"
+              "title": "7. What consistent hashing does *not* solve",
+              "id": "7-what-consistent-hashing-does-not-solve"
             },
             {
               "title": "Exercises",
@@ -92,11 +92,11 @@ window.CURRICULUM = {
               "id": "further-reading"
             }
           ],
-          "words": 2266,
+          "words": 1927,
           "docPath": "phases/01-foundations/03-consistent-hashing/docs/en.md",
           "hasCode": true,
           "hasTests": true,
-          "goFileCount": 3,
+          "goFileCount": 2,
           "designs": [
             {
               "file": "sharding-a-session-store.md",
@@ -121,7 +121,7 @@ window.CURRICULUM = {
           "slug": "05-caching-strategies",
           "num": 5,
           "title": "Caching Strategies and Eviction",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -131,7 +131,7 @@ window.CURRICULUM = {
           "slug": "06-backpressure",
           "num": 6,
           "title": "Backpressure and Load Shedding",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -141,7 +141,7 @@ window.CURRICULUM = {
           "slug": "07-circuit-breakers",
           "num": 7,
           "title": "Circuit Breakers",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -151,7 +151,7 @@ window.CURRICULUM = {
           "slug": "08-bloom-filters",
           "num": 8,
           "title": "Bloom Filters",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -179,7 +179,7 @@ window.CURRICULUM = {
           "slug": "01-load-balancing-algorithms",
           "num": 1,
           "title": "Load Balancing: Round Robin to Power of Two Choices",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -189,7 +189,7 @@ window.CURRICULUM = {
           "slug": "02-health-checking",
           "num": 2,
           "title": "Health Checks and Outlier Detection",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -199,7 +199,7 @@ window.CURRICULUM = {
           "slug": "03-service-discovery",
           "num": 3,
           "title": "Service Discovery",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -219,7 +219,7 @@ window.CURRICULUM = {
           "slug": "05-retries-and-timeouts",
           "num": 5,
           "title": "Retries, Timeouts and Deadline Propagation",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -257,7 +257,7 @@ window.CURRICULUM = {
           "slug": "02-b-tree-vs-lsm",
           "num": 2,
           "title": "B-Trees versus LSM Trees",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -287,7 +287,7 @@ window.CURRICULUM = {
           "slug": "05-partitioning",
           "num": 5,
           "title": "Partitioning and Rebalancing",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -297,7 +297,7 @@ window.CURRICULUM = {
           "slug": "06-transactions",
           "num": 6,
           "title": "Transactions and Isolation Levels",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -335,7 +335,7 @@ window.CURRICULUM = {
           "slug": "02-logical-clocks",
           "num": 2,
           "title": "Logical and Vector Clocks",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -345,7 +345,7 @@ window.CURRICULUM = {
           "slug": "03-quorums",
           "num": 3,
           "title": "Quorums and Tunable Consistency",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -385,7 +385,7 @@ window.CURRICULUM = {
           "slug": "07-merkle-trees",
           "num": 7,
           "title": "Merkle Trees and Anti-Entropy",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -413,7 +413,7 @@ window.CURRICULUM = {
           "slug": "01-queues-vs-logs",
           "num": 1,
           "title": "Queues versus Append-Only Logs",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -423,7 +423,7 @@ window.CURRICULUM = {
           "slug": "02-delivery-semantics",
           "num": 2,
           "title": "At-Most-Once, At-Least-Once, Exactly-Once",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -443,7 +443,7 @@ window.CURRICULUM = {
           "slug": "04-outbox-pattern",
           "num": 4,
           "title": "The Transactional Outbox",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -453,7 +453,7 @@ window.CURRICULUM = {
           "slug": "05-consumer-groups",
           "num": 5,
           "title": "Consumer Groups and Partition Assignment",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -481,7 +481,7 @@ window.CURRICULUM = {
           "slug": "01-observability",
           "num": 1,
           "title": "Metrics, Logs and Traces",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
@@ -491,7 +491,7 @@ window.CURRICULUM = {
           "slug": "02-slos",
           "num": 2,
           "title": "SLOs and Error Budgets",
-          "type": "build",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],

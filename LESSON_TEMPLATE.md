@@ -1,142 +1,167 @@
-# Lesson Template
+# Lesson template
 
-Every lesson declares a **Type**, and the type determines its shape. Pick the one that matches
-what the material actually is — forcing a design topic into a Build lesson produces fake code,
-and forcing an algorithm into a Design lesson wastes a chance to make it concrete.
+Copy this shape. Do not copy it slavishly — the headings a lesson needs depend on what it
+teaches. `scripts/audit_lessons.py` enforces the required ones per type.
 
-| Type | Use when | Ships |
+## The rule this curriculum runs on
+
+**No claim without a number the lesson produced.**
+
+Not a number from a blog post. Not a number you remember. A number that appears because a script
+in the lesson directory printed it, and that a reader can reproduce by running one command.
+
+This is the only rule that matters. Everything below serves it.
+
+## Lesson types
+
+| Type | When to use it | What it must contain |
 | --- | --- | --- |
-| `Build` | The topic is a real algorithm or data structure | Go code + tests + demo |
-| `Simulate` | The system is too large to build, but its behaviour can be measured | A simulation + measurements |
-| `Design` | The answer is a judgement, not an artifact | A brief + rubric + traps |
+| `concept` | **The default.** The idea matters; writing the mechanism does not | Concept, measured output, a script to run, judgement |
+| `build` | Writing the mechanism *is* the insight — Raft, rate limiting under real concurrency | Everything in `concept`, plus a step-by-step `## Build it` |
+| `simulate` | The behaviour cannot be built in a lesson: cache hit ratios, replication lag | A model, its assumptions stated plainly, measured output |
+| `design` | Judgement under ambiguity. No code | The problem, a rubric, traps, a reference direction |
 
-## Directory layout
+**Most lessons are `concept`.** Reach for `build` rarely; roughly six of the planned forty-nine
+justify it. Writing 200 lines of a hash ring teaches you the ring, not when to shard.
 
+## Language
+
+**Pseudocode in the doc. Python in `code/`.**
+
+Pseudocode carries the idea without the reader learning a language first — and without them
+skipping the section because it is in a language they do not use. Keep it close to your own
+notation:
+
+```text
+function Get(key):
+    if slots is empty:
+        return NONE
+    i ← index of first slot ≥ hash(key)
+    return owner[slots[i]]
 ```
-phases/NN-phase-name/NN-lesson-slug/
-├── docs/
-│   └── en.md              the lesson
-├── code/                  Build and Simulate only
-│   ├── <topic>.go
-│   ├── <topic>_test.go    required — a lesson you cannot verify is prose
-│   ├── cmd/<demo>/        runnable demonstration
-│   └── go.mod
-├── quiz.json              6-ish questions, pre and post
-└── design/                optional for Build, required for Design
-    └── <scenario>.md
-```
 
-Directory names are `NN-lowercase-hyphenated`. The audit script enforces this.
+Python exists to produce the numbers, and must be **stdlib-only** — the audit fails on a
+third-party import. If a reader needs `pip install` before seeing a measurement, most will not
+see it.
 
-## docs/en.md — Build and Simulate
+Go, or any second language, appears only where Python physically cannot make the point: the GIL
+means true data races and real parallelism are unobservable. Say in the doc why that lesson has
+two languages.
+
+## Shape
 
 ````markdown
 # Lesson Title
 
-> One-sentence hook. Ideally a number that surprises the reader.
+> A hook with a surprising number. This is the one line a reader will repeat to someone else.
 
-**Type:** Build
-**Language:** Go
-**Prerequisites:** Lesson NN, Lesson NN
-**Time:** ~N minutes
+**Type:** concept
+**Prerequisites:** Lesson NN (topic)
+**Time:** ~45 minutes
 
 ## Learning objectives
 
-- Verb-first and checkable. "Predict how many keys move when..." not "understand hashing"
-- Four is a good number
+By the end you will be able to:
 
-## The problem
+- Predict <specific behaviour> and explain why
+- Distinguish <X> from <Y>, and say which mechanism fixes which
+- Name the failure modes this does *not* fix
 
-The naive approach, written out, then broken with a measurement. Do not describe the failure —
-run it and paste the output. The reader should feel the problem before seeing the fix.
+## 1. The problem
 
-## The concept
+The naive approach, stated without condescension — it is what a competent engineer writes first,
+and usually for good reasons.
 
-The idea, before any code. Use a mermaid diagram if structure matters. Include the maths only
-where it earns its place — a formula that explains *why* the number is what it is, not decoration.
+Then break it, with output:
 
-## Build it
-
-### Step 1: <name>
-
-Explanation, then a code block. Steps should be small enough that each one compiles.
-
-Call out the non-obvious decisions inline: why this hash, why skip on collision, why this is part
-of the contract rather than an internal detail.
-
-## Run it
-
-```bash
-go test ./...
-go run ./cmd/<demo>
+```
+$ python3 code/thing.py
+<real output showing the failure>
 ```
 
-Show the real output. Then explain what the tests assert beyond correctness.
+Name the number in prose. "81% of keys move." That sentence is the lesson.
 
-## Use it
+## 2. The idea
 
-Where this appears in production systems, as a table. Name specific config knobs where you can —
-"Cassandra's num_tokens is this lesson's replicas" is worth more than "Cassandra uses this".
+The mechanism, in words first. A Mermaid diagram if the shape is spatial. Then pseudocode.
 
-## Ship it
+Call out the parts that look incidental and are not — the format string that becomes a wire
+contract, the collision branch that silently loses data.
 
-What reusable artifact the reader now has, and its limits. Be explicit about concurrency,
-scaling, and what you would not use it for.
+## 3. Why the number is what it is
 
-## What this does *not* solve
+Derive it. If churn is 1/N, show why geometrically, then point at the measured column and let the
+reader check the claim against the table.
 
-Non-negotiable section for anything that gets oversold. Every mechanism has a boundary; name it
-so the reader does not reach for this tool on the wrong problem.
+## 4. <The trade-off this lesson exists to teach>
+
+Every lesson has one. Two properties that look like the same thing and are not; a knob with a
+plateau; a fix that creates a new failure.
+
+This is where a curriculum earns its keep. "It depends" is where most explanations stop; this is
+where you say *on what*, with a table.
+
+## 5. Run it
+
+```bash
+python3 code/thing.py
+python3 -m unittest discover -s code -q
+```
+
+Say what the tests assert. If they assert the *teaching* and not just correctness, say so —
+that is unusual and worth pointing out.
+
+## 6. Use it
+
+| System | Where it appears |
+| --- | --- |
+| Real product | The specific knob, named as its docs name it |
+
+Map the lesson's parameter to the real configuration key. `replicas` is Cassandra's `num_tokens`.
+That mapping is what makes the lesson usable at work.
+
+## 7. What this does *not* solve
+
+Be blunt. Every technique is oversold somewhere, and knowing the boundary is most of knowing the
+technique.
 
 ## Exercises
 
-1. Easy — reinforce the core idea
-2. Medium — apply it somewhere else
-3. Medium — measure something the lesson only asserted
-4. Hard — extend it, or break it adversarially
-5. Hard — implement the competing approach and compare
+1. **Easy** — vary one parameter, predict the direction, then measure
+2. **Medium** — extend the model, and state what the extension cost
+3. **Hard** — an alternative from a paper. Why has it not won?
 
 ## Key terms
 
 | Term | What people say | What it actually means |
 | --- | --- | --- |
-| term | the common misconception | the accurate version |
+| Term | The loose version | The precise version, with the number if there is one |
 
 ## Further reading
 
-- [Title](url) — why it is worth your time
+- [Paper](url) — what specifically to read in it, and why
 ````
 
-## docs/en.md — Design
+## Writing rules
 
-Same header, then: `## The problem` (the brief), `## Deliverable`, `## Rubric`,
-`## Traps`, `## Reference direction`, `## Exercises`, `## Further reading`.
+- **Show the failure before the fix.** A reader who has not felt the problem cannot value the
+  solution.
+- **Every number traceable.** If the doc says 81%, `python3 code/thing.py` prints 81%. The audit
+  checks this and fails on stale figures.
+- **Record what surprised you.** The consistent-hashing lesson teaches that virtual-node returns
+  plateau *because a test asserting otherwise failed*. Being wrong in public is the most credible
+  thing in a curriculum.
+- **Familiar vocabulary.** No invented jargon. If a term has a standard name, use it; if it does
+  not, describe it plainly rather than coining one.
+- **No hedging as a substitute for measuring.** "It depends" must be followed by "on what,"
+  answered with data.
+- **Cite where a claim is not yours.** Link the paper, name the version.
 
-The rubric must use `- [ ]` checkboxes so a reader can self-score. The reference direction is
-labelled as *a* strong answer, never *the* answer.
-
-## Rules
-
-**Numbers must be produced, not remembered.** Every figure in a lesson comes from code in that
-lesson. If you cannot generate it, do not claim it.
-
-**Tests assert the teaching, not just correctness.** A test named
-`TestRingBeatsModuloByAtLeast2x` fails when the *idea* breaks. That is the point.
-
-**When a measurement contradicts the lesson, the lesson changes.** This has already happened
-once: a test asserting "more virtual nodes always improve balance" failed, because balance
-plateaus. The lesson now teaches the plateau.
-
-**Code has no explanatory comments, only decision comments.** Do not narrate what the line does.
-Do explain why this hash function, why skip instead of overwrite, what is part of the contract.
-
-**Every lesson runs with only the Go toolchain.** No Docker, no cloud account, no paid API. If a
-lesson needs infrastructure, it should be a Simulate lesson instead.
-
-## Scaffolding a lesson
+## Before you commit
 
 ```bash
-scripts/scaffold_lesson.sh 01-foundations 04-rate-limiting "Rate Limiting" build
-python3 scripts/audit_lessons.py --phase 1
-python3 scripts/audit_lessons.py --run-tests    # before opening a PR
+python3 -m unittest discover -s code -q
+python3 scripts/audit_lessons.py --run-tests
+node site/build.js && node site/test_site.js
+node scripts/serve.js          # read it as a reader would
 ```

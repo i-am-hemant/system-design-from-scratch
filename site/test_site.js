@@ -78,7 +78,7 @@ for (const phase of data.phases) {
     );
     check(
       `${phase.slug}/${lesson.slug}: type is known`,
-      /build|simulate|design|learn/.test(lesson.type || ''),
+      /concept|build|simulate|design/.test(lesson.type || ''),
       `got "${lesson.type}"`
     );
     if (lesson.hasCode) {

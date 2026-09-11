@@ -1,14 +1,15 @@
 # System Design from Scratch
 
-> A free, open-source curriculum that builds system design mechanisms in Go,
-> measures their trade-offs, and grades design judgement against rubrics.
+> A free, open-source curriculum for system design. Every trade-off arrives as a
+> number the lesson itself produced, and every design is graded against a rubric.
 > No claim without a number the lesson produced.
 
 Generated 2026-09-11. 1 of 49 planned lessons written.
 
 ## Lesson types
 
-- Build: a real algorithm implemented in Go with tests that assert the trade-off
+- Concept: the idea, a measured result, and a script you can run and change
+- Build: step-by-step implementation, where writing the mechanism is the insight
 - Simulate: a measurable experiment for systems too large to build in a lesson
 - Design: a brief with a self-scoring rubric, traps, and a reference direction
 
@@ -19,25 +20,25 @@ Generated 2026-09-11. 1 of 49 planned lessons written.
 The vocabulary and the arithmetic. What the properties mean, what they cost, and the primitives that show up in every later phase.
 
 - Why System Design Is a Separate Skill (design) — planned, not yet written
-- Back-of-Envelope Estimation (build) — planned, not yet written
-- [Consistent Hashing](https://systemdesignfromscratch.com/lesson?id=01-foundations/03-consistent-hashing) (build)
+- Back-of-Envelope Estimation (concept) — planned, not yet written
+- [Consistent Hashing](https://systemdesignfromscratch.com/lesson?id=01-foundations/03-consistent-hashing) (concept)
   Adding one server to a modulo-hashed cache moves 81% of your keys. A hash ring moves 20%. Same hardware, same request, one line of different arithmetic.
 - Rate Limiting: Token Bucket to Sliding Window (build) — planned, not yet written
-- Caching Strategies and Eviction (build) — planned, not yet written
-- Backpressure and Load Shedding (build) — planned, not yet written
-- Circuit Breakers (build) — planned, not yet written
-- Bloom Filters (build) — planned, not yet written
+- Caching Strategies and Eviction (concept) — planned, not yet written
+- Backpressure and Load Shedding (concept) — planned, not yet written
+- Circuit Breakers (concept) — planned, not yet written
+- Bloom Filters (concept) — planned, not yet written
 - Why p99 Is Not an Average (simulate) — planned, not yet written
 
 ### Networking and Routing
 
 How a request finds a server, and what happens when the server it finds is the wrong one.
 
-- Load Balancing: Round Robin to Power of Two Choices (build) — planned, not yet written
-- Health Checks and Outlier Detection (build) — planned, not yet written
-- Service Discovery (build) — planned, not yet written
+- Load Balancing: Round Robin to Power of Two Choices (concept) — planned, not yet written
+- Health Checks and Outlier Detection (concept) — planned, not yet written
+- Service Discovery (concept) — planned, not yet written
 - Stateless Service Design (design) — planned, not yet written
-- Retries, Timeouts and Deadline Propagation (build) — planned, not yet written
+- Retries, Timeouts and Deadline Propagation (concept) — planned, not yet written
 - CDNs and Edge Caching (simulate) — planned, not yet written
 
 ### Data and Storage
@@ -45,11 +46,11 @@ How a request finds a server, and what happens when the server it finds is the w
 Where state lives, how it survives a crash, and what you give up to make it fast.
 
 - Write-Ahead Logs (build) — planned, not yet written
-- B-Trees versus LSM Trees (build) — planned, not yet written
+- B-Trees versus LSM Trees (concept) — planned, not yet written
 - Indexes and Query Cost (simulate) — planned, not yet written
 - Replication and Replica Lag (simulate) — planned, not yet written
-- Partitioning and Rebalancing (build) — planned, not yet written
-- Transactions and Isolation Levels (build) — planned, not yet written
+- Partitioning and Rebalancing (concept) — planned, not yet written
+- Transactions and Isolation Levels (concept) — planned, not yet written
 - Choosing a Datastore (design) — planned, not yet written
 
 ### Distributed Systems
@@ -57,31 +58,31 @@ Where state lives, how it survives a crash, and what you give up to make it fast
 What breaks once one machine becomes several, and the algorithms that make disagreement survivable.
 
 - How Distributed Systems Actually Fail (simulate) — planned, not yet written
-- Logical and Vector Clocks (build) — planned, not yet written
-- Quorums and Tunable Consistency (build) — planned, not yet written
+- Logical and Vector Clocks (concept) — planned, not yet written
+- Quorums and Tunable Consistency (concept) — planned, not yet written
 - Leader Election (build) — planned, not yet written
 - Raft: Log Replication from Scratch (build) — planned, not yet written
 - Gossip Protocols (build) — planned, not yet written
-- Merkle Trees and Anti-Entropy (build) — planned, not yet written
+- Merkle Trees and Anti-Entropy (concept) — planned, not yet written
 - CAP Beyond the Triangle (design) — planned, not yet written
 
 ### Messaging and Streams
 
 Decoupling components in time, and the delivery guarantees you can actually buy.
 
-- Queues versus Append-Only Logs (build) — planned, not yet written
-- At-Most-Once, At-Least-Once, Exactly-Once (build) — planned, not yet written
+- Queues versus Append-Only Logs (concept) — planned, not yet written
+- At-Most-Once, At-Least-Once, Exactly-Once (concept) — planned, not yet written
 - Idempotency Keys and Deduplication (build) — planned, not yet written
-- The Transactional Outbox (build) — planned, not yet written
-- Consumer Groups and Partition Assignment (build) — planned, not yet written
+- The Transactional Outbox (concept) — planned, not yet written
+- Consumer Groups and Partition Assignment (concept) — planned, not yet written
 - Windowing and Late Data (simulate) — planned, not yet written
 
 ### Operating in Production
 
 The properties you only discover after launch: observability, cost, and the failure you did not plan for.
 
-- Metrics, Logs and Traces (build) — planned, not yet written
-- SLOs and Error Budgets (build) — planned, not yet written
+- Metrics, Logs and Traces (concept) — planned, not yet written
+- SLOs and Error Budgets (concept) — planned, not yet written
 - Capacity Planning and Cost Modelling (simulate) — planned, not yet written
 - Blue-Green, Canary and Feature Flags (design) — planned, not yet written
 - Debugging a System You Did Not Design (design) — planned, not yet written

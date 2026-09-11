@@ -17,11 +17,11 @@ fi
 PHASE="$1"
 SLUG="$2"
 TITLE="$3"
-TYPE="${4:-build}"
+TYPE="${4:-concept}"
 
 case "$TYPE" in
-  build|simulate|design) ;;
-  *) echo "error: type must be build, simulate, or design (got '$TYPE')" >&2; exit 2 ;;
+  concept|build|simulate|design) ;;
+  *) echo "error: type must be concept, build, simulate, or design (got '$TYPE')" >&2; exit 2 ;;
 esac
 
 REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
@@ -48,7 +48,7 @@ PKG="${SLUG#*-}"
 PKG="${PKG//-/}"
 
 mkdir -p "$LESSON/docs"
-[[ "$TYPE" == "design" ]] || mkdir -p "$LESSON/code/cmd/demo"
+[[ "$TYPE" == "design" ]] || mkdir -p "$LESSON/code"
 mkdir -p "$LESSON/design"
 
 # --- docs/en.md ---
@@ -103,54 +103,61 @@ cat > "$LESSON/docs/en.md" <<EOF
 > TODO: one-sentence hook, ideally a number that surprises the reader.
 
 **Type:** $TYPE
-**Language:** Go
 **Prerequisites:** TODO
-**Time:** ~60 minutes
+**Time:** ~45 minutes
 
 ## Learning objectives
 
+By the end you will be able to:
+
 - TODO verb-first and checkable
 
-## The problem
+## 1. The problem
 
-TODO the naive approach, then break it with a measurement you actually ran.
+TODO the naive approach, stated fairly, then broken with output you actually ran.
 
-## The concept
-
-TODO the idea before the code.
-
-## Build it
-
-### Step 1: TODO
-
-TODO explanation, then code.
-
-## Run it
-
-\`\`\`bash
-go test ./...
-go run ./cmd/demo
+\`\`\`
+\$ python3 code/$PKG.py
+TODO paste real output
 \`\`\`
 
-TODO paste real output.
+## 2. The idea
 
-## Use it
+TODO the mechanism in words, then as pseudocode. Not in a real language — the reader
+should not need to know one.
+
+\`\`\`text
+function TODO(x):
+    TODO
+\`\`\`
+
+## 3. The trade-off this lesson teaches
+
+TODO two properties that look identical and are not, or a knob with a plateau.
+This is the section that justifies the lesson existing.
+
+## 5. Run it
+
+\`\`\`bash
+python3 code/$PKG.py
+python3 -m unittest discover -s code -q
+\`\`\`
+
+TODO say what the tests assert.
+
+## 6. Use it
 
 | System | Where it appears |
 | --- | --- |
-| TODO | TODO |
+| TODO | TODO the real config key, named as its docs name it |
 
-## Ship it
-
-TODO the reusable artifact and its limits.
-
-## What this does *not* solve
+## 7. What this does *not* solve
 
 - TODO
 
 ## Exercises
 
-1. TODO easy
+1. TODO easy — vary one parameter, predict, then measure
 2. TODO medium
 3. TODO hard
 
@@ -165,41 +172,51 @@ TODO the reusable artifact and its limits.
 - [TODO](url) — why it is worth your time
 EOF
 
-# --- code skeleton ---
-cat > "$LESSON/code/go.mod" <<EOF
-module github.com/i-am-hemant/system-design-from-scratch/phases/$PHASE/$SLUG/code
+# --- code skeleton: stdlib only, readable, prints the measurement ---
+cat > "$LESSON/code/$PKG.py" <<EOF
+"""TODO one-line purpose.
 
-go 1.25
+Read this top to bottom; it is meant to be read, not just run.
+
+    python3 $PKG.py
+"""
+
+from __future__ import annotations
+
+
+def measure() -> dict[str, float]:
+    """TODO produce the number this lesson is built around."""
+    raise NotImplementedError("TODO")
+
+
+def main() -> None:
+    raise NotImplementedError("TODO print the measurement table")
+
+
+if __name__ == "__main__":
+    main()
 EOF
 
-cat > "$LESSON/code/$PKG.go" <<EOF
-// Package $PKG TODO one-line purpose.
-package $PKG
+cat > "$LESSON/code/test_$PKG.py" <<EOF
+"""Tests for $PKG.py.
 
-// TODO implement
-EOF
+    python3 -m unittest test_$PKG -v
+"""
 
-cat > "$LESSON/code/${PKG}_test.go" <<EOF
-package $PKG
+from __future__ import annotations
 
-import "testing"
+import unittest
 
-// TODO: at least one test must assert the TRADE-OFF this lesson teaches,
-// not merely that the code is correct.
-func TestTODO(t *testing.T) {
-	t.Skip("not implemented")
-}
-EOF
+import $PKG
 
-cat > "$LESSON/code/cmd/demo/main.go" <<EOF
-// Command demo prints the measurement this lesson is built around.
-package main
 
-import "fmt"
+class Test$(printf '%s' "$PKG" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')(unittest.TestCase):
+    def test_todo_correctness(self):
+        self.skipTest("not implemented")
 
-func main() {
-	fmt.Println("TODO")
-}
+    def test_todo_asserts_the_tradeoff(self):
+        """TODO name this for the IDEA it protects, not the function it calls."""
+        self.skipTest("not implemented")
 EOF
 fi
 

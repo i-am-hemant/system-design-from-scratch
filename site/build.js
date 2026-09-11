@@ -95,8 +95,10 @@ function scanLesson(phaseSlug, lessonSlug) {
   if (md === null) return null;
 
   const codeDir = path.join(dir, 'code');
-  const goFiles = fs.existsSync(codeDir)
-    ? fs.readdirSync(codeDir, { recursive: true }).filter((f) => String(f).endsWith('.go'))
+  const codeFiles = fs.existsSync(codeDir)
+    ? fs.readdirSync(codeDir, { recursive: true }).filter(
+        (f) => String(f).endsWith('.py') && !String(f).includes('__pycache__')
+      )
     : [];
 
   const designDir = path.join(dir, 'design');
@@ -114,7 +116,7 @@ function scanLesson(phaseSlug, lessonSlug) {
     }
   }
 
-  const rawType = extractField(md, 'Type') || 'build';
+  const rawType = extractField(md, 'Type') || 'concept';
 
   return {
     slug: lessonSlug,
@@ -128,9 +130,9 @@ function scanLesson(phaseSlug, lessonSlug) {
     sections: extractSections(md).map((s) => ({ title: s, id: slugifyHeading(s) })),
     words: countWords(md),
     docPath: `phases/${phaseSlug}/${lessonSlug}/docs/en.md`,
-    hasCode: goFiles.length > 0,
-    hasTests: goFiles.some((f) => String(f).endsWith('_test.go')),
-    goFileCount: goFiles.length,
+    hasCode: codeFiles.length > 0,
+    hasTests: codeFiles.some((f) => /(^|\/)test_[\w]+\.py$/.test(String(f))),
+    goFileCount: codeFiles.length,
     designs: designs.map((f) => ({
       file: f,
       title: extractTitle(readIfExists(path.join(designDir, f)) || '') || f,
@@ -201,7 +203,7 @@ function mergePlanned(phases) {
         slug: plannedLesson.slug,
         num: parseInt(plannedLesson.slug, 10) || null,
         title: plannedLesson.title || titleFromSlug(plannedLesson.slug),
-        type: (plannedLesson.type || 'build').toLowerCase(),
+        type: (plannedLesson.type || 'concept').toLowerCase(),
         available: false,
         sections: [],
         designs: [],
@@ -245,15 +247,16 @@ function writeLlmsTxt(phases, s) {
   const lines = [
     '# System Design from Scratch',
     '',
-    '> A free, open-source curriculum that builds system design mechanisms in Go,',
-    '> measures their trade-offs, and grades design judgement against rubrics.',
+    '> A free, open-source curriculum for system design. Every trade-off arrives as a',
+    '> number the lesson itself produced, and every design is graded against a rubric.',
     '> No claim without a number the lesson produced.',
     '',
     `Generated ${s.generated}. ${s.lessonsAvailable} of ${s.lessonsPlanned} planned lessons written.`,
     '',
     '## Lesson types',
     '',
-    '- Build: a real algorithm implemented in Go with tests that assert the trade-off',
+    '- Concept: the idea, a measured result, and a script you can run and change',
+    '- Build: step-by-step implementation, where writing the mechanism is the insight',
     '- Simulate: a measurable experiment for systems too large to build in a lesson',
     '- Design: a brief with a self-scoring rubric, traps, and a reference direction',
     '',

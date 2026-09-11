@@ -20,36 +20,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
-          go-version: '1.25'
+          python-version: '3.13'
 
-      - name: Check formatting
-        # gofmt -l prints files that need formatting; any output is a failure.
-        run: |
-          unformatted="$(gofmt -l . || true)"
-          if [ -n "$unformatted" ]; then
-            echo "::error::gofmt needed for:"
-            echo "$unformatted"
-            exit 1
-          fi
-
-      - name: Vet and test every lesson
-        # Each lesson has its own go.mod so lessons stay independently runnable.
+      - name: Run every lesson's tests
+        # Lessons are stdlib-only and independently runnable, so no install step.
+        # Each code/ directory is discovered and tested on its own.
         run: |
           set -euo pipefail
           failed=0
-          while IFS= read -r mod; do
-            dir="$(dirname "$mod")"
+          while IFS= read -r dir; do
             echo "--- $dir"
-            (cd "$dir" && go vet ./... && go test ./...) || failed=1
-          done < <(find phases -name go.mod | sort)
+            (cd "$dir" && python3 -m unittest discover -s . -q) || failed=1
+          done < <(find phases -type d -name code | sort)
           exit "$failed"
 
-      - name: Audit lesson structure
+      - name: Audit lesson structure and verify measurements
         # Verifies docs match code: sections, quoted identifiers, quiz indices,
-        # relative links, and that every command quoted in a doc actually runs.
+        # relative links, that quoted commands run, and — the important one —
+        # that numbers printed in a doc match what the code prints today.
         run: python3 scripts/audit_lessons.py --run-tests
 
       - name: Build the site
