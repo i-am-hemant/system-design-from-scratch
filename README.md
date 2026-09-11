@@ -52,6 +52,12 @@ go test ./...          # correctness plus trade-off assertions
 go run ./cmd/churn     # see 81% vs 20% for yourself
 ```
 
+Or read it on the site, served with production routing:
+
+```bash
+node scripts/serve.js   # http://localhost:8080
+```
+
 Real output:
 
 ```
