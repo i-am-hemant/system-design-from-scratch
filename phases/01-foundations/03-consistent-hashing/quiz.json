@@ -1,0 +1,76 @@
+{
+  "questions": [
+    {
+      "stage": "pre",
+      "question": "A cache uses hash(key) % 4 to pick one of four servers. You add a fifth server. Roughly what fraction of keys now map to a different server?",
+      "options": [
+        "About 20% — only the new server's share moves",
+        "About 80% — the divisor changed, so most keys move",
+        "About 25% — one server's worth",
+        "None — hashing is stable by definition"
+      ],
+      "correct": 1,
+      "explanation": "Changing the divisor from 4 to 5 changes the result for any key where hash%4 and hash%5 disagree, which is most of them. Measured on 10,000 keys: 81%. Every one of those is a cache miss hitting the database, at the moment you were already under enough load to need a fifth server."
+    },
+    {
+      "stage": "pre",
+      "question": "What is the primary guarantee consistent hashing provides?",
+      "options": [
+        "Keys are distributed perfectly evenly across nodes",
+        "Lookups become O(1) instead of O(log n)",
+        "The number of keys that move when the node set changes is bounded to roughly 1/N",
+        "Hash collisions become impossible"
+      ],
+      "correct": 2,
+      "explanation": "The guarantee is about stability under topology change, not evenness. A ring with one virtual node per physical node already has good churn but terrible balance (measured spread: 540x). Even distribution is a separate property that virtual nodes provide."
+    },
+    {
+      "stage": "post",
+      "question": "In a ring, a key is owned by the first node found walking clockwise from the key's position. What happens to a key that hashes above the highest node position on the circle?",
+      "options": [
+        "It has no owner and the lookup returns an error",
+        "It wraps around to the lowest node position",
+        "It is assigned to the node with the most free capacity",
+        "It is rehashed with a different seed until it lands lower"
+      ],
+      "correct": 1,
+      "explanation": "The wrap is what makes it a circle rather than a line. In code it is the `if i == len(r.slots) { i = 0 }` branch after the binary search. Omit it and every key above the top slot loses its owner."
+    },
+    {
+      "stage": "post",
+      "question": "You measure spread (busiest node / quietest node) for 5 nodes: 1 vnode = 540, 50 vnodes = 1.60, 150 vnodes = 1.50, 500 vnodes = 1.74. What should you conclude?",
+      "options": [
+        "More virtual nodes always improve balance, so use as many as memory allows",
+        "Balance improves sharply up to a plateau near 50, after which extra vnodes buy noise, not fairness",
+        "The measurement is broken, since 500 should beat 150",
+        "Virtual nodes have no effect on balance"
+      ],
+      "correct": 1,
+      "explanation": "The curve plateaus. 500 scoring worse than 150 is hash noise within a flat region, not a trend. Past the plateau you pay memory and lookup time for nothing. This is why Cassandra reduced its default num_tokens from 256 to 16."
+    },
+    {
+      "stage": "post",
+      "question": "One key on your site goes viral and receives 40% of all traffic. You increase virtual nodes from 150 to 1000. What happens to the load on the node owning that key?",
+      "options": [
+        "It drops by roughly 6x as the key is spread across more positions",
+        "It drops slightly, since the arcs are now smaller",
+        "Nothing — one key hashes to one position and therefore one node",
+        "It increases, because more virtual nodes mean more lookups"
+      ],
+      "correct": 2,
+      "explanation": "Virtual nodes balance the *keyspace*, not traffic per key. A single key is a single hash value with a single owner regardless of replica count. Hot keys need a different mechanism: replication of that key, request coalescing, or a local cache in front."
+    },
+    {
+      "stage": "post",
+      "question": "Your team refactors virtualKey from node + \"#\" + i to fmt.Sprintf(\"%s-%d\", node, i). Tests still pass. What have you shipped?",
+      "options": [
+        "Nothing — it is an internal naming detail",
+        "A performance regression from the extra formatting",
+        "A full remap: every virtual node lands at a new position, so effectively every key changes owner",
+        "A collision risk, but existing keys stay put"
+      ],
+      "correct": 2,
+      "explanation": "The virtual-node naming scheme is part of the ring's contract, because it determines every position on the circle. Change the format and the whole topology reshuffles — a total cache flush shipped as a cleanup commit. Unit tests pass because each individual mapping is still internally consistent."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+# Go
+*.exe
+*.test
+*.out
+/vendor/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
