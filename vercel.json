@@ -1,0 +1,38 @@
+{
+  "buildCommand": "node site/build.js",
+  "outputDirectory": "site",
+  "framework": null,
+  "installCommand": "echo skip",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/catalog", "destination": "/catalog.html" },
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/lesson", "destination": "/lesson.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)\\.(css|js|svg|png|woff2)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000" }
+      ]
+    },
+    {
+      "source": "/data.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+    },
+    {
+      "source": "/llms.txt",
+      "headers": [
+        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=300, s-maxage=86400" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
+}

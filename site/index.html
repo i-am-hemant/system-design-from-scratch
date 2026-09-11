@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design from Scratch</title>
+<meta name="description" content="A free, open-source curriculum that builds system design mechanisms in Go, measures their trade-offs, and grades design judgement against rubrics. No claim without a number.">
+<link rel="canonical" href="https://systemdesignfromscratch.com/">
+<link rel="alternate" type="text/markdown" href="https://systemdesignfromscratch.com/llms.txt">
+<meta property="og:title" content="System Design from Scratch">
+<meta property="og:description" content="Build the mechanisms. Measure the trade-offs. Defend the designs. Adding one server to a modulo-hashed cache moves 81% of your keys — a hash ring moves 20%. Prove it yourself.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://systemdesignfromscratch.com">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f7f6f2'/><rect x='2.5' y='2.5' width='27' height='27' fill='none' stroke='%23b25a00' stroke-width='1.5'/><circle cx='16' cy='16' r='8' fill='none' stroke='%23b25a00' stroke-width='1.5'/><circle cx='16' cy='8' r='2' fill='%23b25a00'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "name": "System Design from Scratch",
+  "description": "Build system design mechanisms in Go, measure their trade-offs, and defend design decisions against rubrics.",
+  "url": "https://systemdesignfromscratch.com",
+  "isAccessibleForFree": true,
+  "inLanguage": "en",
+  "teaches": ["Consistent hashing", "Rate limiting", "Caching", "Replication", "Consensus", "Load balancing", "Capacity estimation"]
+}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">SD</span>
+      System Design from Scratch
+    </a>
+    <nav class="site-nav">
+      <a href="/" aria-current="page">Home</a>
+      <a href="/catalog">Catalog</a>
+      <a href="/about">About</a>
+      <a href="https://github.com/i-am-hemant/system-design-from-scratch">GitHub</a>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle colour theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Free · Open source · MIT</p>
+    <h1>Build the mechanisms. Measure the trade-offs.</h1>
+    <p class="lede">
+      Most system design material teaches you to recite answers. This teaches you to derive them.
+      You implement the algorithms in Go, measure what they cost, and defend your designs against
+      a rubric — because a trade-off you cannot measure is one you are taking on faith.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="/catalog">Browse the curriculum</a>
+      <a class="btn" href="/lesson?id=01-foundations/03-consistent-hashing">Start with consistent hashing</a>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>The whole idea in one measurement</h2>
+  <p>
+    "Consistent hashing reduces key movement" is a sentence you can memorise without
+    understanding. So don't memorise it — run it. This is real output from the lesson's code,
+    comparing naive modulo mapping against a hash ring as the cluster grows:
+  </p>
+
+  <div class="measure-block">
+    <header>go run ./cmd/churn</header>
+    <div class="body"><pre>CHANGE           MODULO   RING    IDEAL   RING vs MODULO
+2 -&gt; 3 nodes     66.9%    34.3%   33.3%   2.0x better
+4 -&gt; 5 nodes     81.0%    25.1%   20.0%   3.2x better
+8 -&gt; 9 nodes     89.2%     7.8%   11.1%   11.4x better
+16 -&gt; 17 nodes   94.6%     6.5%    5.9%   14.6x better
+32 -&gt; 33 nodes   97.1%     3.8%    3.0%   25.7x better
+64 -&gt; 65 nodes   98.5%     1.1%    1.5%   86.4x better</pre></div>
+    <p class="caption">
+      Adding one server to a four-node cache remaps <strong>81%</strong> of keys — every one a
+      cache miss hitting the database, exactly when you were already under load. Note the shape:
+      modulo gets <em>worse</em> as you scale, the ring gets better. No paragraph conveys that
+      like the numbers do.
+    </p>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Three kinds of lesson</h2>
+  <p>
+    System design does not decompose the way machine learning does. You can implement backprop
+    and verify it numerically; you cannot implement "design a news feed." So the curriculum is
+    honest about which kind of thing each topic is.
+  </p>
+
+  <div class="grid">
+    <div class="card">
+      <span class="badge badge-build">Build</span>
+      <h3>Code the primitive</h3>
+      <p>
+        Some topics are genuine algorithms: hash rings, token buckets, bloom filters, write-ahead
+        logs, leader election, circuit breakers. You implement them in Go with tests that assert
+        the trade-off, not just correctness.
+      </p>
+    </div>
+    <div class="card">
+      <span class="badge badge-simulate">Simulate</span>
+      <h3>Measure the trade-off</h3>
+      <p>
+        You cannot build DynamoDB in a lesson. You can simulate load and watch p99 fall when you
+        add a cache — and watch staleness appear. Trade-offs become numbers you generated
+        yourself.
+      </p>
+    </div>
+    <div class="card">
+      <span class="badge badge-design">Design</span>
+      <h3>Defend the judgement</h3>
+      <p>
+        Some answers have no unit test. These ship a brief, a self-scoring rubric, a table of
+        traps, and a reference direction — labelled as <em>a</em> strong answer, never
+        <em>the</em> answer.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Tests that assert the teaching</h2>
+  <p>
+    Ordinary tests check that code is correct. These also check that the <em>idea</em> still
+    holds, so a refactor that breaks the lesson fails loudly:
+  </p>
+  <pre><code>func TestModuloRemapsNearlyEverything(t *testing.T)  // fails if modulo churn drops below 70%
+func TestRingMovesOnlyItsShare(t *testing.T)         // fails if ring churn exceeds 35%
+func TestRingBeatsModuloByAtLeast2x(t *testing.T)    // fails if the gap ever closes
+func TestSpreadPlateaus(t *testing.T)                // records where extra vnodes stop paying</code></pre>
+  <p>
+    This keeps the curriculum honest about itself. While writing the first lesson, a test
+    asserting <em>"more virtual nodes always improve balance"</em> <strong>failed</strong> —
+    because it isn't true. Load balance plateaus around 50 replicas, and 500 can score worse than
+    150. The lesson now teaches the plateau, and cites why Cassandra reduced its default
+    <code>num_tokens</code> from 256 to 16.
+  </p>
+  <p class="muted">
+    That outcome is the method working: a measurement overruled a plausible belief.
+  </p>
+</section>
+
+<section class="wrap">
+  <h2>Where it stands</h2>
+  <p id="status-line" class="muted mono">Loading…</p>
+  <div id="phase-preview"></div>
+  <p>
+    <a class="btn" href="/catalog">See the full curriculum</a>
+  </p>
+</section>
+
+<section class="wrap">
+  <h2>Who it's for</h2>
+  <ul>
+    <li><strong>Beginners</strong> — start at phase 1 and go in order. Everything runs on your laptop with the Go toolchain and nothing else.</li>
+    <li><strong>Working engineers</strong> — jump to the lesson for the thing you're about to build. Each has a "what this does <em>not</em> solve" section you'll want before committing.</li>
+    <li><strong>Interview prep</strong> — the design exercises are the closest thing here to a real interview, and the rubrics tell you what a strong answer names.</li>
+  </ul>
+  <p>
+    No prior distributed-systems knowledge assumed. Basic Go is enough — the code avoids clever
+    constructs on purpose.
+  </p>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>MIT licensed. Fork it, teach from it.</span>
+    <span class="mono muted" id="footer-stats"></span>
+    <a href="/llms.txt">llms.txt</a>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+  (function () {
+    var c = window.CURRICULUM;
+    if (!c) return;
+    var s = c.stats;
+
+    document.getElementById('status-line').textContent =
+      s.lessonsAvailable + ' of ' + s.lessonsPlanned + ' planned lessons written · ' +
+      s.phases + ' phases · ' + s.withTests + ' with runnable tests · ' +
+      s.designExercises + ' design exercises · ' + s.quizQuestions + ' quiz questions';
+
+    document.getElementById('footer-stats').textContent = 'built ' + s.generated;
+
+    // Show phases with a written lesson first; the rest are honestly marked planned.
+    var host = document.getElementById('phase-preview');
+    var grid = document.createElement('div');
+    grid.className = 'grid';
+    c.phases.forEach(function (phase) {
+      var done = phase.lessons.filter(function (l) { return l.available; }).length;
+      var card = document.createElement(done ? 'a' : 'div');
+      card.className = 'card';
+      if (done) card.href = '/catalog#' + phase.slug;
+      var kicker = document.createElement('span');
+      kicker.className = 'kicker';
+      kicker.textContent = 'Phase ' + (phase.num != null ? phase.num : '');
+      var h = document.createElement('h3');
+      h.textContent = phase.title;
+      var p = document.createElement('p');
+      p.textContent = phase.summary || '';
+      var badge = document.createElement('span');
+      badge.className = 'badge ' + (done ? 'badge-done' : 'badge-planned');
+      badge.textContent = done ? done + ' of ' + phase.lessons.length + ' written' : 'planned';
+      card.appendChild(kicker);
+      card.appendChild(h);
+      card.appendChild(p);
+      card.appendChild(badge);
+      grid.appendChild(card);
+    });
+    host.appendChild(grid);
+  })();
+</script>
+</body>
+</html>

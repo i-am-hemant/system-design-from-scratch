@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalog · System Design from Scratch</title>
+<meta name="description" content="Every lesson in the System Design from Scratch curriculum: build, simulate and design lessons across foundations, networking, storage, distributed systems, messaging, operations and real-world designs.">
+<link rel="canonical" href="https://systemdesignfromscratch.com/catalog">
+<link rel="alternate" type="text/markdown" href="https://systemdesignfromscratch.com/llms.txt">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f7f6f2'/><rect x='2.5' y='2.5' width='27' height='27' fill='none' stroke='%23b25a00' stroke-width='1.5'/><circle cx='16' cy='16' r='8' fill='none' stroke='%23b25a00' stroke-width='1.5'/><circle cx='16' cy='8' r='2' fill='%23b25a00'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">SD</span>
+      System Design from Scratch
+    </a>
+    <nav class="site-nav">
+      <a href="/">Home</a>
+      <a href="/catalog">Catalog</a>
+      <a href="/about">About</a>
+      <a href="https://github.com/i-am-hemant/system-design-from-scratch">GitHub</a>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle colour theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <h1 style="margin-top:2.5rem">Curriculum</h1>
+  <p class="lede" style="color:var(--ink-soft);max-width:62ch">
+    Lessons marked <span class="badge badge-planned">planned</span> are in the outline but not yet
+    written. The site is generated from the repository, so it cannot link to a lesson that does
+    not exist.
+  </p>
+
+  <p id="catalog-stats" class="mono muted"></p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:0.6rem;align-items:center;margin:1.6rem 0">
+    <input id="search" type="search" placeholder="Filter lessons…  (press /)"
+      style="flex:1;min-width:220px;padding:0.55rem 0.8rem;font-family:var(--font-mono);font-size:0.86rem;background:var(--bg-surface);border:1px solid var(--rule-soft);border-radius:3px;color:var(--ink)">
+    <span class="badge" id="filter-count"></span>
+  </div>
+
+  <div id="catalog"></div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>MIT licensed.</span>
+    <a href="/llms.txt">llms.txt</a>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var c = window.CURRICULUM;
+  if (!c) return;
+
+  document.getElementById('catalog-stats').textContent =
+    c.stats.lessonsAvailable + ' written · ' + c.stats.lessonsPlanned + ' planned · ' +
+    c.stats.phases + ' phases';
+
+  var host = document.getElementById('catalog');
+  var search = document.getElementById('search');
+  var countEl = document.getElementById('filter-count');
+
+  function badgeClass(type) {
+    if (type.indexOf('build') !== -1) return 'badge-build';
+    if (type.indexOf('simulate') !== -1) return 'badge-simulate';
+    if (type.indexOf('design') !== -1) return 'badge-design';
+    return '';
+  }
+
+  function render(filter) {
+    host.textContent = '';
+    var q = (filter || '').trim().toLowerCase();
+    var shown = 0;
+
+    c.phases.forEach(function (phase) {
+      var matches = phase.lessons.filter(function (l) {
+        if (!q) return true;
+        return (
+          l.title.toLowerCase().indexOf(q) !== -1 ||
+          (l.type || '').toLowerCase().indexOf(q) !== -1 ||
+          phase.title.toLowerCase().indexOf(q) !== -1
+        );
+      });
+      if (!matches.length) return;
+
+      var written = matches.filter(function (l) { return l.available; }).length;
+      shown += matches.length;
+
+      var details = document.createElement('details');
+      details.className = 'phase';
+      details.id = phase.slug;
+      if (written > 0 || q) details.open = true;
+
+      var summary = document.createElement('summary');
+      var label = document.createElement('span');
+      label.textContent = phase.title;
+      var count = document.createElement('span');
+      count.className = 'count';
+      count.textContent = written + ' / ' + matches.length + ' written';
+      summary.appendChild(label);
+      summary.appendChild(count);
+      details.appendChild(summary);
+
+      if (phase.summary) {
+        var blurb = document.createElement('p');
+        blurb.style.cssText =
+          'padding:0.8rem 1.1rem 0;margin:0;font-size:0.94rem;color:var(--ink-soft);max-width:none';
+        blurb.textContent = phase.summary;
+        details.appendChild(blurb);
+      }
+
+      var ul = document.createElement('ul');
+      ul.className = 'lesson-list';
+
+      matches.forEach(function (lesson) {
+        var li = document.createElement('li');
+        var row;
+
+        if (lesson.available) {
+          row = document.createElement('a');
+          row.href = '/lesson?id=' + phase.slug + '/' + lesson.slug;
+        } else {
+          row = document.createElement('span');
+          row.className = 'pending';
+        }
+
+        var num = document.createElement('span');
+        num.className = 'num';
+        num.textContent = lesson.num != null ? String(lesson.num).padStart(2, '0') : '--';
+
+        var title = document.createElement('span');
+        title.className = 'title';
+        title.textContent = lesson.title;
+
+        var type = document.createElement('span');
+        type.className = 'badge ' + badgeClass(lesson.type || '');
+        type.textContent = lesson.type || 'build';
+
+        row.appendChild(num);
+        row.appendChild(title);
+
+        if (lesson.available) {
+          if (lesson.hasTests) {
+            var t = document.createElement('span');
+            t.className = 'badge badge-done';
+            t.textContent = 'tested';
+            row.appendChild(t);
+          }
+          if (lesson.designs && lesson.designs.length) {
+            var d = document.createElement('span');
+            d.className = 'badge';
+            d.textContent = 'rubric';
+            row.appendChild(d);
+          }
+        } else {
+          var p = document.createElement('span');
+          p.className = 'badge badge-planned';
+          p.textContent = 'planned';
+          row.appendChild(p);
+        }
+
+        row.appendChild(type);
+        li.appendChild(row);
+        ul.appendChild(li);
+      });
+
+      details.appendChild(ul);
+      host.appendChild(details);
+    });
+
+    countEl.textContent = q ? shown + ' matching' : '';
+
+    if (!shown) {
+      var empty = document.createElement('p');
+      empty.className = 'muted';
+      empty.textContent = 'No lessons match "' + q + '".';
+      host.appendChild(empty);
+    }
+  }
+
+  render('');
+
+  var timer;
+  search.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(function () { render(search.value); }, 90);
+  });
+
+  // Deep link to a phase.
+  if (location.hash) {
+    var target = document.getElementById(location.hash.slice(1));
+    if (target) {
+      target.open = true;
+      target.scrollIntoView();
+    }
+  }
+})();
+</script>
+</body>
+</html>

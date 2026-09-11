@@ -1,0 +1,902 @@
+/* System Design from Scratch — design system.
+
+   Visual grammar: engineering drawing. Graph paper, hairline rules, hard shadows,
+   one accent colour used only for meaning (state, links, measured values).
+   The reference repo uses a blueprint-blue on cream; this uses a slate/amber
+   pairing so the two projects read as siblings, not clones.
+
+   No framework, no build step for CSS. Custom properties do the theming. */
+
+:root {
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Source Serif 4', 'Iowan Old Style', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+
+  /* Paper */
+  --bg: #f7f6f2;
+  --bg-surface: #efede6;
+  --bg-surface-hover: #e6e3d9;
+  --ink: #17181c;
+  --ink-soft: #4b4d55;
+  --ink-mute: #7d7f88;
+  --rule: #17181c;
+  --rule-soft: rgba(23, 24, 28, 0.16);
+  --paper-rule: rgba(23, 24, 28, 0.07);
+
+  /* Accent: signal amber. Used for measured values and current state. */
+  --signal: #b25a00;
+  --signal-tint: rgba(178, 90, 0, 0.08);
+  --signal-tint-strong: rgba(178, 90, 0, 0.17);
+
+  /* Semantic */
+  --ok: #2f6f4f;
+  --warn: #b25a00;
+  --bad: #a3352b;
+  --status-done: #2f6f4f;
+  --status-wip: #b25a00;
+  --status-planned: #b2b0a8;
+
+  --code-bg: #eae7dd;
+  --overlay-bg: rgba(23, 24, 28, 0.55);
+  --header-bg: rgba(247, 246, 242, 0.94);
+
+  --header-offset: 76px;
+  --measure: 68ch;
+
+  --motion-press: 140ms;
+  --motion-enter: 200ms;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  --shadow-hard: 3px 3px 0 var(--ink);
+  --shadow-hard-lg: 5px 5px 0 var(--ink);
+}
+
+[data-theme='dark'] {
+  --bg: #101116;
+  --bg-surface: #191b22;
+  --bg-surface-hover: #22252f;
+  --ink: #e9e7df;
+  --ink-soft: #a9a8a2;
+  --ink-mute: #7c7d84;
+  --rule: #e9e7df;
+  --rule-soft: rgba(233, 231, 223, 0.18);
+  --paper-rule: rgba(233, 231, 223, 0.07);
+
+  --signal: #f0a44a;
+  --signal-tint: rgba(240, 164, 74, 0.12);
+  --signal-tint-strong: rgba(240, 164, 74, 0.22);
+
+  --ok: #6fbe92;
+  --bad: #e8776a;
+  --status-done: #6fbe92;
+  --status-wip: #f0a44a;
+  --status-planned: #4d4f58;
+
+  --code-bg: #1b1e26;
+  --overlay-bg: rgba(0, 0, 0, 0.66);
+  --header-bg: rgba(16, 17, 22, 0.94);
+
+  --shadow-hard: 3px 3px 0 rgba(0, 0, 0, 0.55);
+  --shadow-hard-lg: 5px 5px 0 rgba(0, 0, 0, 0.55);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  /* Graph paper. Two grids: fine 8px, heavier 40px. */
+  background-image:
+    linear-gradient(var(--paper-rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-rule) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.65;
+  font-optical-sizing: auto;
+}
+
+/* --- Type ---------------------------------------------------------------- */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3.1rem);
+  margin: 0 0 0.5rem;
+}
+
+h2 {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  margin: 2.6rem 0 0.8rem;
+}
+
+h3 {
+  font-size: 1.2rem;
+  margin: 2rem 0 0.6rem;
+}
+
+p {
+  margin: 0 0 1.1rem;
+  max-width: var(--measure);
+}
+
+a {
+  color: var(--signal);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  background: var(--signal-tint);
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+  font-size: 0.87em;
+}
+
+:not(pre) > code {
+  background: var(--code-bg);
+  padding: 0.12em 0.36em;
+  border-radius: 3px;
+  border: 1px solid var(--rule-soft);
+}
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  line-height: 1.5;
+  margin: 0 0 1.2rem;
+}
+
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+blockquote {
+  margin: 0 0 1.4rem;
+  padding: 0.2rem 0 0.2rem 1.1rem;
+  border-left: 3px solid var(--signal);
+  color: var(--ink-soft);
+  font-size: 1.06em;
+  max-width: var(--measure);
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule-soft);
+  margin: 2.4rem 0;
+}
+
+ul,
+ol {
+  max-width: var(--measure);
+  padding-left: 1.4rem;
+  margin: 0 0 1.2rem;
+}
+
+li {
+  margin: 0.3rem 0;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 0 1.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+th,
+td {
+  border: 1px solid var(--rule-soft);
+  padding: 0.45rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: var(--bg-surface);
+  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+tbody tr:hover {
+  background: var(--bg-surface);
+}
+
+/* Tabular figures so measured columns line up. */
+td.num,
+th.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* --- Layout -------------------------------------------------------------- */
+
+.wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.wrap-narrow {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* --- Header -------------------------------------------------------------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--header-bg);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.site-header .wrap {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  height: var(--header-offset);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  white-space: nowrap;
+}
+
+.brand:hover {
+  background: none;
+}
+
+.brand-mark {
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid var(--signal);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--signal);
+  flex: none;
+}
+
+.site-nav {
+  display: flex;
+  gap: 0.3rem;
+  margin-left: auto;
+  align-items: center;
+}
+
+.site-nav a {
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 3px;
+}
+
+.site-nav a:hover,
+.site-nav a[aria-current='page'] {
+  color: var(--ink);
+  background: var(--bg-surface);
+}
+
+.site-nav a[aria-current='page'] {
+  box-shadow: inset 0 -2px 0 var(--signal);
+}
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--rule-soft);
+  color: var(--ink-soft);
+  width: 34px;
+  height: 34px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  transition: background var(--motion-press) var(--ease-out);
+}
+
+.icon-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--ink);
+}
+
+/* --- Hero ---------------------------------------------------------------- */
+
+.hero {
+  padding: 4.5rem 0 3rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.hero .eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--signal);
+  margin: 0 0 1rem;
+}
+
+.hero h1 {
+  max-width: 22ch;
+}
+
+.hero .lede {
+  font-size: 1.16rem;
+  color: var(--ink-soft);
+  max-width: 60ch;
+  margin: 1.1rem 0 1.8rem;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.btn {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.6rem 1.1rem;
+  border: 1.5px solid var(--ink);
+  background: var(--bg);
+  color: var(--ink);
+  text-decoration: none;
+  border-radius: 3px;
+  cursor: pointer;
+  box-shadow: var(--shadow-hard);
+  transition:
+    transform var(--motion-press) var(--ease-out),
+    box-shadow var(--motion-press) var(--ease-out);
+}
+
+.btn:hover {
+  background: var(--bg);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-hard-lg);
+}
+
+.btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn-primary {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--signal);
+}
+
+/* --- The measurement block: this project's signature element ------------- */
+
+/* Renders a real measured result. Used wherever the site makes a claim, so a
+   number on screen always looks like output rather than marketing. */
+.measure-block {
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-hard);
+  margin: 2rem 0;
+  overflow: hidden;
+}
+
+.measure-block header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--rule-soft);
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-mute);
+}
+
+.measure-block header::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--signal);
+  flex: none;
+}
+
+.measure-block .body {
+  padding: 0.9rem;
+  overflow-x: auto;
+}
+
+.measure-block pre {
+  margin: 0;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.8rem;
+}
+
+.measure-block .caption {
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--rule-soft);
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  max-width: none;
+  margin: 0;
+}
+
+/* --- Cards / grids ------------------------------------------------------- */
+
+.grid {
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin: 1.6rem 0;
+}
+
+.card {
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  background: var(--bg-surface);
+  padding: 1.2rem;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition:
+    transform var(--motion-press) var(--ease-out),
+    border-color var(--motion-press) var(--ease-out);
+}
+
+a.card:hover {
+  background: var(--bg-surface);
+  border-color: var(--ink);
+  transform: translateY(-2px);
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.card p {
+  margin: 0;
+  font-size: 0.94rem;
+  color: var(--ink-soft);
+  max-width: none;
+}
+
+.card .kicker {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+}
+
+/* --- Badges -------------------------------------------------------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.16rem 0.45rem;
+  border-radius: 3px;
+  border: 1px solid var(--rule-soft);
+  background: var(--bg);
+  color: var(--ink-soft);
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* A long badge (e.g. a prerequisites list) must wrap rather than push the page
+   wider than the viewport on mobile. */
+.badge-wrap {
+  white-space: normal;
+  text-align: left;
+}
+
+.badge-build {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.badge-simulate {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+.badge-design {
+  border-color: var(--ink-soft);
+  color: var(--ink-soft);
+}
+.badge-done {
+  border-color: var(--status-done);
+  color: var(--status-done);
+}
+.badge-planned {
+  border-color: var(--status-planned);
+  color: var(--ink-mute);
+}
+
+/* --- Phase / lesson list ------------------------------------------------- */
+
+.phase {
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  margin: 0 0 1rem;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+.phase > summary {
+  cursor: pointer;
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  list-style: none;
+  background: var(--bg);
+}
+
+.phase > summary::-webkit-details-marker {
+  display: none;
+}
+
+.phase > summary::before {
+  content: '+';
+  font-family: var(--font-mono);
+  color: var(--signal);
+  width: 1ch;
+  flex: none;
+}
+
+.phase[open] > summary::before {
+  content: '\2212';
+}
+
+.phase > summary .count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--ink-mute);
+  font-weight: 400;
+}
+
+.lesson-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: none;
+}
+
+.lesson-list li {
+  margin: 0;
+  border-top: 1px solid var(--rule-soft);
+}
+
+.lesson-list a,
+.lesson-list .pending {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1.1rem;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 0.96rem;
+}
+
+.lesson-list a:hover {
+  background: var(--bg-surface-hover);
+}
+
+.lesson-list .pending {
+  color: var(--ink-mute);
+  cursor: default;
+}
+
+.lesson-list .num {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-mute);
+  flex: none;
+  width: 2.4ch;
+}
+
+.lesson-list .title {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Lesson page --------------------------------------------------------- */
+
+.lesson-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 268px;
+  gap: 4.5rem;
+  align-items: start;
+  padding: 2.5rem 0 4rem;
+}
+
+.lesson-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0 0 1.6rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.toc {
+  position: sticky;
+  top: calc(var(--header-offset) + 1.5rem);
+  font-size: 0.88rem;
+  /* A long lesson can have 20+ headings; without its own scroll container the
+     rail overflows the viewport on a short laptop screen and the lower entries
+     become unreachable. */
+  max-height: calc(100vh - var(--header-offset) - 3rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.toc h4 {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+  margin: 0 0 0.7rem;
+}
+
+.toc ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+  border-left: 1px solid var(--rule-soft);
+}
+
+.toc li {
+  margin: 0;
+}
+
+.toc a {
+  display: block;
+  padding: 0.24rem 0.7rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+}
+
+.toc a:hover {
+  color: var(--ink);
+  background: none;
+}
+
+.toc a.active {
+  color: var(--signal);
+  border-left-color: var(--signal);
+}
+
+.prose > *:first-child {
+  margin-top: 0;
+}
+
+/* Mermaid and figure holders keep the drawing aesthetic. */
+.prose .mermaid,
+.figure {
+  background: var(--bg-surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 0 0 1.4rem;
+  overflow-x: auto;
+  text-align: center;
+}
+
+/* --- Footer -------------------------------------------------------------- */
+
+.site-footer {
+  border-top: 1px solid var(--rule-soft);
+  margin-top: 4rem;
+  padding: 2.2rem 0 3rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.site-footer .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.site-footer a {
+  color: var(--ink-soft);
+}
+
+/* --- Utilities ----------------------------------------------------------- */
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.muted {
+  color: var(--ink-mute);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--signal);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+/* --- Responsive ---------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .lesson-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+  .toc {
+    position: static;
+    border: 1px solid var(--rule-soft);
+    border-radius: 4px;
+    padding: 0.9rem;
+    background: var(--bg-surface);
+  }
+}
+
+@media (max-width: 680px) {
+  body {
+    font-size: 16px;
+  }
+  /* The nav has five items; at this width it must be allowed to scroll rather
+     than widen the page. A horizontally pannable page is the worst mobile bug
+     because every vertical scroll drifts sideways. */
+  .site-header .wrap {
+    height: auto;
+    min-height: var(--header-offset);
+    flex-wrap: wrap;
+    padding-block: 0.6rem;
+    gap: 0.5rem 0.8rem;
+  }
+  .brand {
+    font-size: 0.94rem;
+  }
+  .site-nav {
+    margin-left: 0;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .site-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .site-nav a {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .icon-btn {
+    flex: none;
+  }
+  .hero {
+    padding: 3rem 0 2rem;
+  }
+}
+
+@media print {
+  .site-header,
+  .site-footer,
+  .toc,
+  .hero-actions {
+    display: none;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+}

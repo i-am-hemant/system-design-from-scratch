@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About · System Design from Scratch</title>
+<meta name="description" content="Why System Design from Scratch exists, how its three lesson types work, and the rule that no claim ships without a number the lesson produced.">
+<link rel="canonical" href="https://systemdesignfromscratch.com/about">
+<link rel="alternate" type="text/markdown" href="https://systemdesignfromscratch.com/llms.txt">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f7f6f2'/><rect x='2.5' y='2.5' width='27' height='27' fill='none' stroke='%23b25a00' stroke-width='1.5'/><circle cx='16' cy='16' r='8' fill='none' stroke='%23b25a00' stroke-width='1.5'/><circle cx='16' cy='8' r='2' fill='%23b25a00'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">SD</span>
+      System Design from Scratch
+    </a>
+    <nav class="site-nav">
+      <a href="/">Home</a>
+      <a href="/catalog">Catalog</a>
+      <a href="/about">About</a>
+      <a href="https://github.com/i-am-hemant/system-design-from-scratch">GitHub</a>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle colour theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap-narrow">
+  <h1 style="margin-top:2.5rem">About</h1>
+
+  <blockquote>
+    No claim without a number the lesson produced.
+  </blockquote>
+
+  <h2>The problem with system design material</h2>
+  <p>
+    Every resource has the same shape: a list of concepts, a diagram of a URL shortener, and a
+    promise that you will pass the interview. You read it, nod, and two weeks later cannot explain
+    why your own service fell over.
+  </p>
+  <p>
+    The reason is that design knowledge does not transfer by reading.
+    <em>"Consistent hashing reduces key movement"</em> is a sentence you can memorise without
+    understanding a thing. But implement the naive version, measure that adding one server to a
+    four-node cache moves <strong>81%</strong> of your keys, then implement the ring and watch it
+    drop to <strong>20%</strong> — now you know something you cannot un-know, and can rederive
+    under pressure.
+  </p>
+
+  <h2>Three lesson types</h2>
+  <p>
+    System design does not decompose the way machine learning does. In an ML curriculum you can
+    implement backprop and verify it numerically. There is no equivalent for "design a news feed" —
+    the artifact is a judgement, not a passing test.
+  </p>
+  <p>
+    Pretending otherwise produces the standard failure: hundreds of pages of prose with nothing to
+    run. So each topic is matched to what it actually is.
+  </p>
+  <ul>
+    <li>
+      <strong>Build</strong> — genuine algorithms, implemented in Go with tests: hash rings, token
+      buckets, bloom filters, write-ahead logs, leader election, circuit breakers, merkle trees.
+    </li>
+    <li>
+      <strong>Simulate</strong> — for systems too large to build. Model the load and measure the
+      trade-off: watch p99 drop when a cache is added, and watch staleness appear alongside it.
+    </li>
+    <li>
+      <strong>Design</strong> — for judgement with no unit test. A brief, a self-scoring rubric, a
+      table of traps, and a reference direction labelled as <em>a</em> strong answer.
+    </li>
+  </ul>
+
+  <h2>Tests assert the teaching</h2>
+  <p>
+    Ordinary tests check correctness. These also check that the idea holds, so a refactor that
+    breaks a lesson fails with a message naming the property that died:
+  </p>
+  <pre><code>TestModuloRemapsNearlyEverything   fails if modulo churn drops below 70%
+TestRingMovesOnlyItsShare          fails if ring churn exceeds 35%
+TestRingBeatsModuloByAtLeast2x     fails if the gap ever closes
+TestSpreadPlateaus                 records where extra virtual nodes stop paying</code></pre>
+
+  <h2>When the measurement wins</h2>
+  <p>
+    This has already happened once, in the first lesson written. A test asserting
+    <em>"more virtual nodes always improve load balance"</em> failed against the real
+    implementation. Balance plateaus around 50 replicas, and 500 can score <em>worse</em> than 150 —
+    noise in a flat region, not a trend.
+  </p>
+  <p>
+    So the lesson now teaches the plateau, and cites why Cassandra reduced its default
+    <code>num_tokens</code> from 256 to 16. The plausible belief was wrong and the measurement
+    caught it. That is the method working, and it is the standing rule: when a measurement
+    contradicts a lesson, the lesson changes.
+  </p>
+
+  <h2>Why Go</h2>
+  <p>
+    One language for the whole curriculum, because this domain's real infrastructure is written in
+    it — etcd, Kubernetes, Consul, CockroachDB — and because goroutines and channels let a lesson
+    show concurrency without a framework in the way. Nothing to install beyond the Go toolchain,
+    and no dependencies in any lesson.
+  </p>
+
+  <h2>How the site is built</h2>
+  <p>
+    <code>node site/build.js</code> scans the <code>phases/</code> directory and generates the
+    catalog. The source of truth is the filesystem, not a hand-maintained list, so the site
+    <em>cannot</em> advertise a lesson that has not been written. Planned lessons come from
+    <code>curriculum.json</code> and render as explicitly unavailable.
+  </p>
+  <p>
+    There is no framework and no bundler. Lesson pages fetch the markdown straight from the
+    repository and render it with a small auditable parser
+    (<code>site/md.js</code>, 46 tests, 8 of them for HTML escaping). Agents can read
+    <a href="/llms.txt">llms.txt</a> for a link-rich map of the curriculum.
+  </p>
+
+  <h2>Credit</h2>
+  <p>
+    The lesson format — Problem → Concept → Build It → Use It → Ship It, with per-lesson quizzes
+    and a shippable artifact — is adapted from
+    <a href="https://github.com/rohitg00/ai-engineering-from-scratch">ai-engineering-from-scratch</a>
+    by Rohit Ghumare, which demonstrates the format at 523-lesson scale. The adaptation here is
+    the simulate-and-grade tiers, since system design has fewer things you can implement outright
+    and more things you can only measure or argue about.
+  </p>
+
+  <h2>Contributing</h2>
+  <p>
+    The most valuable contribution is <strong>finding a claim the code does not support</strong>.
+    If a lesson asserts something its own code fails to demonstrate, that is the highest-value bug
+    report here — open an issue even without a fix.
+  </p>
+  <p>
+    <a class="btn" href="https://github.com/i-am-hemant/system-design-from-scratch">Repository</a>
+  </p>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>MIT licensed. Fork it, teach from it.</span>
+    <a href="/llms.txt">llms.txt</a>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

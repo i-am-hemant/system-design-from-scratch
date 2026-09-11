@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson · System Design from Scratch</title>
+<meta name="description" content="A lesson from the System Design from Scratch curriculum.">
+<link rel="alternate" type="text/markdown" href="https://systemdesignfromscratch.com/llms.txt">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f7f6f2'/><rect x='2.5' y='2.5' width='27' height='27' fill='none' stroke='%23b25a00' stroke-width='1.5'/><circle cx='16' cy='16' r='8' fill='none' stroke='%23b25a00' stroke-width='1.5'/><circle cx='16' cy='8' r='2' fill='%23b25a00'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">SD</span>
+      System Design from Scratch
+    </a>
+    <nav class="site-nav">
+      <a href="/">Home</a>
+      <a href="/catalog">Catalog</a>
+      <a href="/about">About</a>
+      <a href="https://github.com/i-am-hemant/system-design-from-scratch">GitHub</a>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle colour theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <div class="lesson-layout">
+    <article>
+      <p class="mono muted" style="margin:0 0 0.6rem;font-size:0.8rem">
+        <a href="/catalog">Catalog</a> <span id="crumb-phase"></span>
+      </p>
+      <div class="lesson-meta" id="lesson-meta" hidden></div>
+      <div class="prose" id="content">
+        <p class="muted">Loading lesson…</p>
+      </div>
+
+      <section id="quiz-section" hidden>
+        <h2 id="check-yourself">Check yourself</h2>
+        <p class="muted">Answers reveal on click. Explanations included.</p>
+        <div id="quiz"></div>
+      </section>
+
+      <section id="design-section" hidden>
+        <h2 id="design-exercises">Design exercises</h2>
+        <div id="designs"></div>
+      </section>
+
+      <nav id="lesson-nav" style="display:flex;gap:0.7rem;flex-wrap:wrap;margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--rule-soft)"></nav>
+    </article>
+
+    <aside class="toc" id="toc" hidden>
+      <h4>On this page</h4>
+      <ul id="toc-list"></ul>
+    </aside>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>MIT licensed.</span>
+    <span class="mono muted" id="source-link"></span>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="md.js"></script>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var REPO_RAW = 'https://raw.githubusercontent.com/i-am-hemant/system-design-from-scratch/main/';
+  var REPO_BLOB = 'https://github.com/i-am-hemant/system-design-from-scratch/blob/main/';
+
+  var params = new URLSearchParams(location.search);
+  var id = params.get('id') || '';
+  var parts = id.split('/');
+  var content = document.getElementById('content');
+
+  /* Fetch a repository file, preferring the published raw URL and falling back to
+     a relative path for local preview (python3 -m http.server at the repo root).
+     Written as one helper because getting the fallback wrong silently produced an
+     empty quiz: a rejected fetch must be retried, not passed on as a Response. */
+  function fetchRepoFile(relPath) {
+    return fetch(REPO_RAW + relPath)
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res;
+      })
+      .catch(function () {
+        return fetch('../' + relPath).then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res;
+        });
+      });
+  }
+
+  function fail(msg) {
+    content.textContent = '';
+    var h = document.createElement('h1');
+    h.textContent = 'Lesson not found';
+    var p = document.createElement('p');
+    p.textContent = msg;
+    var a = document.createElement('a');
+    a.className = 'btn';
+    a.href = '/catalog';
+    a.textContent = 'Browse the catalog';
+    content.appendChild(h);
+    content.appendChild(p);
+    content.appendChild(a);
+  }
+
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    fail('Expected a lesson id like 01-foundations/03-consistent-hashing.');
+    return;
+  }
+
+  var c = window.CURRICULUM;
+  var phase = c && c.phases.filter(function (p) { return p.slug === parts[0]; })[0];
+  var lesson = phase && phase.lessons.filter(function (l) { return l.slug === parts[1]; })[0];
+
+  if (!lesson) {
+    fail('No lesson with id "' + id + '".');
+    return;
+  }
+  if (!lesson.available) {
+    content.textContent = '';
+    var h1 = document.createElement('h1');
+    h1.textContent = lesson.title;
+    var badge = document.createElement('p');
+    badge.innerHTML = '<span class="badge badge-planned">planned</span>';
+    var note = document.createElement('p');
+    note.textContent =
+      'This lesson is in the curriculum outline but has not been written yet. ' +
+      'Contributions are welcome — see CONTRIBUTING.md in the repository.';
+    content.appendChild(h1);
+    content.appendChild(badge);
+    content.appendChild(note);
+    return;
+  }
+
+  document.title = lesson.title + ' · System Design from Scratch';
+  var crumb = document.getElementById('crumb-phase');
+  crumb.textContent = ' / ' + phase.title;
+
+  // --- meta row ---
+  var meta = document.getElementById('lesson-meta');
+  function addBadge(text, cls) {
+    if (!text) return;
+    var s = document.createElement('span');
+    s.className = 'badge ' + (cls || '');
+    s.textContent = text;
+    meta.appendChild(s);
+  }
+  var typeCls =
+    (lesson.type || '').indexOf('build') !== -1 ? 'badge-build'
+      : (lesson.type || '').indexOf('simulate') !== -1 ? 'badge-simulate'
+      : 'badge-design';
+  addBadge(lesson.type, typeCls);
+  addBadge(lesson.language);
+  addBadge(lesson.time);
+  // Green reads as "verified", so reserve it for the verification badge only.
+  if (lesson.hasTests) addBadge('tested', 'badge-done');
+  if (lesson.quizCount) addBadge(lesson.quizCount + ' quiz questions');
+  if (lesson.prerequisites) {
+    var pre = document.createElement('span');
+    pre.className = 'badge badge-wrap';
+    pre.style.textTransform = 'none';
+    pre.style.letterSpacing = '0';
+    pre.textContent = 'needs: ' + lesson.prerequisites;
+    meta.appendChild(pre);
+  }
+  meta.hidden = false;
+
+  // --- render the doc straight from the repository markdown ---
+  fetchRepoFile(lesson.docPath)
+    .then(function (res) { return res.text(); })
+    .then(function (md) {
+      // The `**Type:** ... **Time:** ...` header block is already rendered as
+      // badges above, so strip it rather than showing every fact twice (it also
+      // collapses into one run-on paragraph, which reads as a bug).
+      var body = md.replace(
+        /^\*\*(?:Type|Language|Languages|Prerequisites|Time):\*\*.*$\n?/gm,
+        ''
+      );
+      var out = window.MD.render(body);
+      content.innerHTML = out.html;
+      buildToc(out.headings);
+      renderMath();
+      renderMermaid();
+      renderQuiz();
+      renderDesigns();
+      renderNav();
+      var src = document.getElementById('source-link');
+      var a = document.createElement('a');
+      a.href = REPO_BLOB + lesson.docPath;
+      a.textContent = 'view source';
+      src.appendChild(a);
+    })
+    .catch(function (err) {
+      fail('Could not load the lesson source (' + err.message + ').');
+    });
+
+  /* KaTeX and Mermaid are loaded on demand, only on pages that need them, so a
+     lesson with no maths and no diagrams pays nothing. */
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = function () { reject(new Error('failed to load ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function renderMath() {
+    var text = content.textContent || '';
+    if (!/\$/.test(text)) return;
+    var css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css';
+    document.head.appendChild(css);
+    loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js')
+      .then(function () {
+        return loadScript(
+          'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js'
+        );
+      })
+      .then(function () {
+        if (!window.renderMathInElement) return;
+        window.renderMathInElement(content, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+          ],
+          // Lessons quote shell output containing $ — never throw on it.
+          throwOnError: false,
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        });
+      })
+      .catch(function () {
+        /* Offline or CDN blocked: the raw TeX stays readable. */
+      });
+  }
+
+  function renderMermaid() {
+    var blocks = content.querySelectorAll('.mermaid');
+    if (!blocks.length) return;
+    loadScript('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js')
+      .then(function () {
+        if (!window.mermaid) return;
+        var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: dark ? 'dark' : 'neutral',
+          fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+          securityLevel: 'strict',
+        });
+        // The markdown renderer escapes diagram source; mermaid needs it raw.
+        Array.prototype.forEach.call(blocks, function (el) {
+          el.textContent = el.textContent;
+        });
+        return window.mermaid.run({ nodes: blocks });
+      })
+      .catch(function () {
+        /* Diagram source remains visible as text. */
+      });
+  }
+
+  function buildToc(headings) {
+    if (!headings.length) return;
+    var list = document.getElementById('toc-list');
+    headings.forEach(function (h) {
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = '#' + h.id;
+      // Strip inline markdown: TOC entries are plain text, so `code`, *emphasis*
+      // and **strong** markers must not survive as literal characters.
+      a.textContent = h.text
+        .replace(/`/g, '')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/_([^_]+)_/g, '$1');
+      if (h.level === 3) {
+        a.style.paddingLeft = '1.6rem';
+        a.style.fontSize = '0.94em';
+        a.style.color = 'var(--ink-mute)';
+      }
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+    document.getElementById('toc').hidden = false;
+
+    // Highlight the section in view.
+    var links = Array.prototype.slice.call(list.querySelectorAll('a'));
+    var targets = headings
+      .map(function (h) { return document.getElementById(h.id); })
+      .filter(Boolean);
+    if (!('IntersectionObserver' in window) || !targets.length) return;
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          links.forEach(function (l) { l.classList.remove('active'); });
+          var match = links.filter(function (l) {
+            return l.getAttribute('href') === '#' + entry.target.id;
+          })[0];
+          if (match) match.classList.add('active');
+        });
+      },
+      { rootMargin: '-80px 0px -70% 0px' }
+    );
+    targets.forEach(function (t) { observer.observe(t); });
+  }
+
+  function renderQuiz() {
+    if (!lesson.quizCount) return;
+    var base = 'phases/' + phase.slug + '/' + lesson.slug + '/quiz.json';
+    fetchRepoFile(base)
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        var host = document.getElementById('quiz');
+        var stageOrder = { pre: 0, check: 1, post: 2 };
+        var questions = (data.questions || []).slice().sort(function (a, b) {
+          return (stageOrder[a.stage] || 0) - (stageOrder[b.stage] || 0);
+        });
+
+        questions.forEach(function (q, i) {
+          var card = document.createElement('div');
+          card.className = 'card';
+          card.style.marginBottom = '0.9rem';
+
+          var stage = document.createElement('span');
+          stage.className = 'kicker';
+          stage.textContent = (q.stage || 'check') + ' · question ' + (i + 1);
+          card.appendChild(stage);
+
+          var question = document.createElement('h3');
+          question.textContent = q.question;
+          card.appendChild(question);
+
+          var list = document.createElement('div');
+          list.style.cssText = 'display:flex;flex-direction:column;gap:0.35rem;margin:0.4rem 0';
+          (q.options || []).forEach(function (opt, idx) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = String.fromCharCode(65 + idx) + '.  ' + opt;
+            btn.style.cssText =
+              'text-align:left;font-family:var(--font-body);font-size:0.95rem;padding:0.5rem 0.7rem;' +
+              'background:var(--bg);border:1px solid var(--rule-soft);border-radius:3px;cursor:pointer;color:var(--ink)';
+            btn.addEventListener('click', function () {
+              var correct = idx === q.correct;
+              btn.style.borderColor = correct ? 'var(--ok)' : 'var(--bad)';
+              btn.style.background = correct ? 'rgba(47,111,79,0.1)' : 'rgba(163,53,43,0.08)';
+              var exp = card.querySelector('.explanation');
+              if (exp) exp.hidden = false;
+            });
+            list.appendChild(btn);
+          });
+          card.appendChild(list);
+
+          var exp = document.createElement('p');
+          exp.className = 'explanation';
+          exp.hidden = true;
+          exp.style.cssText =
+            'font-size:0.92rem;color:var(--ink-soft);border-left:3px solid var(--signal);padding-left:0.8rem;margin:0.5rem 0 0;max-width:none';
+          exp.textContent = q.explanation || '';
+          card.appendChild(exp);
+
+          host.appendChild(card);
+        });
+
+        document.getElementById('quiz-section').hidden = false;
+      })
+      .catch(function () { /* quiz is optional */ });
+  }
+
+  function renderDesigns() {
+    if (!lesson.designs || !lesson.designs.length) return;
+    var host = document.getElementById('designs');
+    lesson.designs.forEach(function (d) {
+      var a = document.createElement('a');
+      a.className = 'card';
+      a.href = REPO_BLOB + d.path;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      var k = document.createElement('span');
+      k.className = 'kicker';
+      k.textContent = 'rubric · traps · reference direction';
+      var h = document.createElement('h3');
+      h.textContent = d.title;
+      var p = document.createElement('p');
+      p.textContent = 'Write your answer first, then score it against the rubric.';
+      a.appendChild(k);
+      a.appendChild(h);
+      a.appendChild(p);
+      host.appendChild(a);
+    });
+    document.getElementById('design-section').hidden = false;
+  }
+
+  function renderNav() {
+    var flat = [];
+    c.phases.forEach(function (p) {
+      p.lessons.forEach(function (l) {
+        if (l.available) flat.push({ phase: p, lesson: l });
+      });
+    });
+    var idx = -1;
+    flat.forEach(function (e, i) {
+      if (e.phase.slug === phase.slug && e.lesson.slug === lesson.slug) idx = i;
+    });
+    var host = document.getElementById('lesson-nav');
+
+    function link(entry, label) {
+      var a = document.createElement('a');
+      a.className = 'btn';
+      a.href = '/lesson?id=' + entry.phase.slug + '/' + entry.lesson.slug;
+      a.textContent = label + entry.lesson.title;
+      host.appendChild(a);
+    }
+    if (idx > 0) link(flat[idx - 1], '\u2190 ');
+    if (idx >= 0 && idx < flat.length - 1) link(flat[idx + 1], '\u2192 ');
+    if (host.children.length === 0) {
+      var a = document.createElement('a');
+      a.className = 'btn';
+      a.href = '/catalog';
+      a.textContent = 'Browse the catalog';
+      host.appendChild(a);
+    }
+  }
+})();
+</script>
+</body>
+</html>

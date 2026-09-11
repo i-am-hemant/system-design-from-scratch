@@ -51,3 +51,26 @@ jobs:
         # Verifies docs match code: sections, quoted identifiers, quiz indices,
         # relative links, and that every command quoted in a doc actually runs.
         run: python3 scripts/audit_lessons.py --run-tests
+
+      - name: Build the site
+        # The catalog is generated from phases/ on disk, so a broken build means
+        # the site would advertise lessons that do not exist.
+        run: node site/build.js
+
+      - name: Test the markdown renderer
+        # Lesson content is injected as innerHTML; the escaping tests here are a
+        # security check, not a formatting one.
+        run: node site/test_md.js
+
+      - name: Test site build artifacts
+        run: node site/test_site.js
+
+      - name: Fail if the build left the site dirty
+        # data.js, llms.txt and sitemap.xml are committed. If building changes
+        # them, someone edited a lesson without rebuilding.
+        run: |
+          if ! git diff --quiet -- site/; then
+            echo "::error::site/ is stale — run 'node site/build.js' and commit the result"
+            git diff --stat -- site/
+            exit 1
+          fi

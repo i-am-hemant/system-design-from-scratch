@@ -4,10 +4,10 @@
       "stage": "pre",
       "question": "A cache uses hash(key) % 4 to pick one of four servers. You add a fifth server. Roughly what fraction of keys now map to a different server?",
       "options": [
-        "About 20% — only the new server's share moves",
-        "About 80% — the divisor changed, so most keys move",
-        "About 25% — one server's worth",
-        "None — hashing is stable by definition"
+        "About 20% \u2014 only the new server's share moves",
+        "About 80% \u2014 the divisor changed, so most keys move",
+        "About 25% \u2014 one server's worth",
+        "None \u2014 hashing is stable by definition"
       ],
       "correct": 1,
       "explanation": "Changing the divisor from 4 to 5 changes the result for any key where hash%4 and hash%5 disagree, which is most of them. Measured on 10,000 keys: 81%. Every one of those is a cache miss hitting the database, at the moment you were already under enough load to need a fifth server."
@@ -25,7 +25,7 @@
       "explanation": "The guarantee is about stability under topology change, not evenness. A ring with one virtual node per physical node already has good churn but terrible balance (measured spread: 540x). Even distribution is a separate property that virtual nodes provide."
     },
     {
-      "stage": "post",
+      "stage": "check",
       "question": "In a ring, a key is owned by the first node found walking clockwise from the key's position. What happens to a key that hashes above the highest node position on the circle?",
       "options": [
         "It has no owner and the lookup returns an error",
@@ -37,7 +37,7 @@
       "explanation": "The wrap is what makes it a circle rather than a line. In code it is the `if i == len(r.slots) { i = 0 }` branch after the binary search. Omit it and every key above the top slot loses its owner."
     },
     {
-      "stage": "post",
+      "stage": "check",
       "question": "You measure spread (busiest node / quietest node) for 5 nodes: 1 vnode = 540, 50 vnodes = 1.60, 150 vnodes = 1.50, 500 vnodes = 1.74. What should you conclude?",
       "options": [
         "More virtual nodes always improve balance, so use as many as memory allows",
@@ -54,7 +54,7 @@
       "options": [
         "It drops by roughly 6x as the key is spread across more positions",
         "It drops slightly, since the arcs are now smaller",
-        "Nothing — one key hashes to one position and therefore one node",
+        "Nothing \u2014 one key hashes to one position and therefore one node",
         "It increases, because more virtual nodes mean more lookups"
       ],
       "correct": 2,
@@ -64,13 +64,13 @@
       "stage": "post",
       "question": "Your team refactors virtualKey from node + \"#\" + i to fmt.Sprintf(\"%s-%d\", node, i). Tests still pass. What have you shipped?",
       "options": [
-        "Nothing — it is an internal naming detail",
+        "Nothing \u2014 it is an internal naming detail",
         "A performance regression from the extra formatting",
         "A full remap: every virtual node lands at a new position, so effectively every key changes owner",
         "A collision risk, but existing keys stay put"
       ],
       "correct": 2,
-      "explanation": "The virtual-node naming scheme is part of the ring's contract, because it determines every position on the circle. Change the format and the whole topology reshuffles — a total cache flush shipped as a cleanup commit. Unit tests pass because each individual mapping is still internally consistent."
+      "explanation": "The virtual-node naming scheme is part of the ring's contract, because it determines every position on the circle. Change the format and the whole topology reshuffles \u2014 a total cache flush shipped as a cleanup commit. Unit tests pass because each individual mapping is still internally consistent."
     }
   ]
 }
