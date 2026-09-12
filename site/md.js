@@ -34,6 +34,26 @@
       .replace(/\s+/g, '-');
   }
 
+  /** Allow only safe URL schemes, and escape what survives.
+   *
+   * Lesson markdown is fetched from the repository and injected as innerHTML, so a
+   * link target is an injection vector: `javascript:` executes, and a bare quote
+   * would break out of the attribute. Returns '' for anything suspicious, and the
+   * caller then renders plain text instead of a link.
+   */
+  function safeUrl(raw) {
+    var url = String(raw).trim();
+    if (!url) return '';
+    // Strip control characters that can hide a scheme, e.g. "java\tscript:".
+    var probe = url.replace(/[\u0000-\u0020]/g, '').toLowerCase();
+    if (/^(javascript|vbscript|file):/.test(probe)) return '';
+    // data: URLs are only safe here for images; SVG can carry script, so refuse it.
+    if (/^data:/.test(probe) && !/^data:image\/(png|jpe?g|gif|webp);base64,/.test(probe)) {
+      return '';
+    }
+    return escapeHtml(url);
+  }
+
   /** Inline formatting. Input must already be HTML-escaped. */
   function inline(text) {
     var out = text;
@@ -47,15 +67,39 @@
     });
 
     // Images before links: same bracket syntax, leading !
+    //
+    // A figure whose path ends in -light.svg is treated as a themed pair: the
+    // matching -dark.svg is emitted alongside it and CSS shows one per theme.
+    // This is how Excalidraw diagrams stay legible in dark mode — a single static
+    // SVG would keep its light-mode strokes against a dark page.
     out = out.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, function (_, alt, src) {
-      return '<img src="' + src + '" alt="' + alt + '" loading="lazy">';
+      var url = safeUrl(src);
+      if (!url) return escapeHtml(alt);
+      if (/-light\.svg$/.test(url)) {
+        var dark = url.replace(/-light\.svg$/, '-dark.svg');
+        // No loading="lazy" on a themed pair: the hidden variant is display:none, and
+        // a lazy image that is never visible is never fetched — so switching theme
+        // showed an empty box until something forced a reflow.
+        return (
+          '<span class="figure figure-themed">' +
+          '<img class="figure-light" src="' + url + '" alt="' + escapeHtml(alt) + '">' +
+          '<img class="figure-dark" src="' + dark + '" alt="' + escapeHtml(alt) + '">' +
+          '</span>'
+        );
+      }
+      return (
+        '<span class="figure"><img src="' + url + '" alt="' + escapeHtml(alt) +
+        '" loading="lazy"></span>'
+      );
     });
 
     out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (_, label, href) {
-      var external = /^https?:/.test(href);
+      var url = safeUrl(href);
+      if (!url) return label;
+      var external = /^https?:/.test(url);
       return (
         '<a href="' +
-        href +
+        url +
         '"' +
         (external ? ' target="_blank" rel="noopener noreferrer"' : '') +
         '>' +

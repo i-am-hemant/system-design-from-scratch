@@ -760,13 +760,47 @@ a.card:hover {
 /* Mermaid and figure holders keep the drawing aesthetic. */
 .prose .mermaid,
 .figure {
+  display: block;
   background: var(--bg-surface);
   border: 1px solid var(--rule-soft);
-  border-radius: 4px;
   padding: 1rem;
   margin: 0 0 1.4rem;
   overflow-x: auto;
   text-align: center;
+}
+
+.figure img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Diagrams committed as SVG — Excalidraw exports, or anything hand-drawn that
+   Mermaid's auto-layout fights. Mermaid re-renders on theme change and so gets
+   dark mode for free; a static SVG cannot. A figure named *-light.svg is paired
+   with a *-dark.svg and swapped here.
+
+   Default is light, so a missing dark export degrades to a readable figure
+   rather than an empty box. */
+.figure-themed .figure-dark {
+  display: none;
+}
+
+[data-theme='dark'] .figure-themed .figure-light {
+  display: none;
+}
+
+[data-theme='dark'] .figure-themed .figure-dark {
+  display: inline-block;
+}
+
+@media print {
+  .figure-themed .figure-dark {
+    display: none !important;
+  }
+
+  .figure-themed .figure-light {
+    display: inline-block !important;
+  }
 }
 
 /* --- Footer -------------------------------------------------------------- */

@@ -86,18 +86,25 @@
   var content = document.getElementById('content');
 
   /* Fetch a repository file, preferring the published raw URL and falling back to
-     a relative path for local preview (python3 -m http.server at the repo root).
+     a relative path for local preview (node scripts/serve.js at the repo root).
      Written as one helper because getting the fallback wrong silently produced an
-     empty quiz: a rejected fetch must be retried, not passed on as a Response. */
+     empty quiz: a rejected fetch must be retried, not passed on as a Response.
+
+     Records which base won, so figures can be resolved against the same origin as
+     the doc that referenced them. */
+  var resolvedBase = null;
+
   function fetchRepoFile(relPath) {
     return fetch(REPO_RAW + relPath)
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
+        resolvedBase = REPO_RAW;
         return res;
       })
       .catch(function () {
         return fetch('../' + relPath).then(function (res) {
           if (!res.ok) throw new Error('HTTP ' + res.status);
+          resolvedBase = new URL('../', location.href).href;
           return res;
         });
       });
@@ -151,6 +158,26 @@
   var crumb = document.getElementById('crumb-phase');
   crumb.textContent = ' / ' + phase.title;
 
+  /* Rewrite doc-relative image paths against the lesson directory.
+   *
+   * Markdown in docs/en.md refers to '../figures/x.svg', which is correct on disk
+   * and on GitHub. But the page lives at /lesson?id=..., so the browser resolves
+   * that against '/' and 404s. Resolve each src against the doc's real location
+   * instead — this is why the figure looked present but rendered blank.
+   */
+  function resolveFigurePaths() {
+    // resolvedBase is whichever source actually served the doc: the GitHub raw URL
+    // in production, or the local preview root. Resolve against that, not against
+    // location.href, which is /lesson and would send '../figures/x' to the site root.
+    var base = new URL(lesson.docPath, resolvedBase || location.href);
+    var imgs = content.querySelectorAll('img[src]');
+    for (var i = 0; i < imgs.length; i++) {
+      var raw = imgs[i].getAttribute('src');
+      if (/^(https?:|data:|\/)/.test(raw)) continue;
+      imgs[i].src = new URL(raw, base).href;
+    }
+  }
+
   // --- meta row ---
   var meta = document.getElementById('lesson-meta');
   function addBadge(text, cls) {
@@ -193,6 +220,7 @@
       );
       var out = window.MD.render(body);
       content.innerHTML = out.html;
+      resolveFigurePaths();
       buildToc(out.headings);
       renderMath();
       renderMermaid();

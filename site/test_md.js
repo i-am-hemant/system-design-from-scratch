@@ -178,4 +178,39 @@ if (failures.length) {
   failures.forEach((f) => console.error('  x ' + f + '\n'));
   process.exit(1);
 }
+
+// --- figures and URL safety ---------------------------------------------------
+
+check('plain image renders in a figure', r('![ring](figures/ring.svg)'),
+  contains('<span class="figure"><img src="figures/ring.svg"'));
+
+check('image alt is escaped', r('![<script>x</script>](a.png)'), excludes('<script>'));
+
+check('themed pair emits both variants',
+  r('![ring](figures/ring-light.svg)'), contains('figures/ring-dark.svg'));
+
+check('themed pair keeps the light variant',
+  r('![ring](figures/ring-light.svg)'), contains('figures/ring-light.svg'));
+
+check('themed pair is marked for CSS swapping',
+  r('![ring](figures/ring-light.svg)'), contains('figure-themed'));
+
+check('non-light svg is not paired',
+  r('![x](figures/plain.svg)'), excludes('figure-themed'));
+
+// A link target is an injection vector: lesson markdown is injected as innerHTML.
+check('javascript: link is refused', r('[click](javascript:alert(1))'), excludes('javascript:'));
+check('javascript: link degrades to text', r('[click](javascript:alert(1))'), contains('click'));
+check('obfuscated javascript: is refused',
+  r('[x](java\tscript:alert(1))'), excludes('script:alert'));
+check('vbscript: link is refused', r('[x](vbscript:msgbox)'), excludes('vbscript:'));
+check('data: svg image is refused', r('![x](data:image/svg+xml,<svg onload=alert(1)>)'),
+  excludes('data:image/svg'));
+check('data: png image is allowed',
+  r('![x](data:image/png;base64,iVBORw0KGgo=)'), contains('data:image/png'));
+check('quote in url cannot break the attribute',
+  r('[x](http://a.com/"onmouseover="alert(1))'), excludes('onmouseover="alert'));
+check('https link still works', r('[x](https://example.com)'), contains('href="https://example.com"'));
+check('relative link still works', r('[x](../other/doc.md)'), contains('href="../other/doc.md"'));
+
 console.log(`md.js: ${pass} checks passed`);

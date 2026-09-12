@@ -142,6 +142,48 @@ technique.
 - [Paper](url) — what specifically to read in it, and why
 ````
 
+## Diagrams
+
+Two mechanisms, and the choice matters:
+
+**Mermaid** — the default. Fenced ```` ```mermaid ````. It is diffable text, reviewable in a pull
+request, and re-renders on theme change so dark mode is free. Use it for flowcharts, sequence
+diagrams, state machines, anything Mermaid's auto-layout handles well.
+
+**Committed SVG** — for diagrams where Mermaid's auto-layout fights you: spatial arrangements,
+hand-drawn shapes, a ring with keys walking clockwise, rack and topology sketches. Excalidraw is
+a good source for these.
+
+A static SVG cannot re-theme itself, so export **both variants** and name them as a pair:
+
+```
+figures/
+├── ring-walk.excalidraw     the editable source — commit it
+├── ring-walk-light.svg      exported for light theme
+└── ring-walk-dark.svg       exported for dark theme
+```
+
+Reference only the light one; the renderer pairs them automatically:
+
+```markdown
+![A key between node-A and node-B walks clockwise to node-B](../figures/ring-walk-light.svg)
+```
+
+Rules:
+
+- **Keep the `.excalidraw` source in the repo.** An SVG you cannot edit is a diagram you will
+  never fix.
+- **Match the design system.** Set Excalidraw's font to "Normal" or Code rather than the default
+  hand-drawn Virgil, which clashes with the site's typography. Palette: ink `#17181c`, paper
+  `#f7f6f2`, one accent `#b25a00` (dark: `#e9e7df`, `#101116`, `#e08a2e`).
+- **Alt text is a sentence, not a label.** "A key between node-A and node-B walks clockwise to
+  node-B" — not "ring diagram". It is what a screen reader and a search index get.
+- **A figure is never the only carrier of a fact.** Say the number in prose too; the diagram
+  illustrates, it does not testify.
+
+Do not add a live Excalidraw renderer. `@excalidraw/excalidraw` is 47 MB and needs React, against
+a site that currently ships zero dependencies.
+
 ## Writing rules
 
 - **Show the failure before the fix.** A reader who has not felt the problem cannot value the

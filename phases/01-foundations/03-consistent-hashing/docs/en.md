@@ -88,6 +88,8 @@ That is the whole idea:
 - **Modulo** makes every key's answer depend on the *number* of nodes.
 - **The ring** makes it depend only on the *neighbourhood*, so a change stays local.
 
+![A key hashing between node-A and node-B walks clockwise and is owned by node-B](../figures/ring-walk-light.svg)
+
 ### In pseudocode
 
 Placing a node is a loop; finding a key's owner is a binary search over sorted positions.

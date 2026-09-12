@@ -8,8 +8,8 @@ window.CURRICULUM = {
     "withTests": 1,
     "designExercises": 1,
     "quizQuestions": 6,
-    "words": 1927,
-    "generated": "2026-09-11"
+    "words": 1941,
+    "generated": "2026-09-12"
   },
   "phases": [
     {
@@ -92,7 +92,7 @@ window.CURRICULUM = {
               "id": "further-reading"
             }
           ],
-          "words": 1927,
+          "words": 1941,
           "docPath": "phases/01-foundations/03-consistent-hashing/docs/en.md",
           "hasCode": true,
           "hasTests": true,
