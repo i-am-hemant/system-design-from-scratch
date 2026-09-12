@@ -143,12 +143,11 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`LESSON_TEMPLATE.md`](LESSON_TEMPL
 
 ## Prior art and credit
 
-The lesson structure — Problem → Concept → Build It → Use It → Ship It, plus per-lesson quizzes
-and shippable artifacts — is adapted from
-[ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch) by Rohit
-Ghumare, which demonstrates the format at 503-lesson scale. The adaptation for this domain is the
-simulate-and-grade tiers, since system design has fewer things you can implement outright and
-more things you can only measure or argue.
+The per-lesson shape here — objectives, a quiz staged before and after, and a self-contained
+directory holding the doc, its code and its exercise — follows the pattern set by the
+"from scratch" curriculum repos. This project diverges in two ways that matter: lessons teach with
+pseudocode and keep code as verification rather than as the exercise, and design judgement is
+graded against rubrics because most of system design has no unit test.
 
 ## Licence
 

@@ -54,7 +54,7 @@
     under pressure.
   </p>
 
-  <h2>Three lesson types</h2>
+  <h2>Four lesson types</h2>
   <p>
     System design does not decompose the way machine learning does. In an ML curriculum you can
     implement backprop and verify it numerically. There is no equivalent for "design a news feed" —
@@ -66,8 +66,14 @@
   </p>
   <ul>
     <li>
-      <strong>Build</strong> — genuine algorithms, implemented in Go with tests: hash rings, token
-      buckets, bloom filters, write-ahead logs, leader election, circuit breakers, merkle trees.
+      <strong>Concept</strong> — the default, and most of the curriculum. The mechanism in
+      pseudocode, a measured result, and a script to run and change. Knowing when to shard is the
+      skill; hand-writing a hash ring is not.
+    </li>
+    <li>
+      <strong>Build</strong> — reserved for the few topics where writing the mechanism is itself
+      the insight: consensus, leader election, rate limiting under real concurrency, write-ahead
+      logs.
     </li>
     <li>
       <strong>Simulate</strong> — for systems too large to build. Model the load and measure the
@@ -103,12 +109,17 @@ TestSpreadPlateaus                 records where extra virtual nodes stop paying
     contradicts a lesson, the lesson changes.
   </p>
 
-  <h2>Why Go</h2>
+  <h2>Pseudocode, and Python behind it</h2>
   <p>
-    One language for the whole curriculum, because this domain's real infrastructure is written in
-    it — etcd, Kubernetes, Consul, CockroachDB — and because goroutines and channels let a lesson
-    show concurrency without a framework in the way. Nothing to install beyond the Go toolchain,
-    and no dependencies in any lesson.
+    The subject is system design, not a programming language. So each mechanism is written as
+    pseudocode — readable whatever you work in, and impossible to skip because it is in a language
+    you do not use.
+  </p>
+  <p>
+    Behind every lesson sits one Python script whose only job is producing the numbers the lesson
+    quotes. Standard library only, so it runs on a fresh machine with nothing installed. You mostly
+    read and run it rather than write it — it exists so that every "it depends" ends in a figure you
+    can reproduce and check.
   </p>
 
   <h2>How the site is built</h2>
@@ -121,18 +132,15 @@ TestSpreadPlateaus                 records where extra virtual nodes stop paying
   <p>
     There is no framework and no bundler. Lesson pages fetch the markdown straight from the
     repository and render it with a small auditable parser
-    (<code>site/md.js</code>, 46 tests, 8 of them for HTML escaping). Agents can read
+    (<code>site/md.js</code>, 59 tests, 17 of them for HTML escaping and URL safety). Agents can read
     <a href="/llms.txt">llms.txt</a> for a link-rich map of the curriculum.
   </p>
 
-  <h2>Credit</h2>
+  <h2>The rule</h2>
   <p>
-    The lesson format — Problem → Concept → Build It → Use It → Ship It, with per-lesson quizzes
-    and a shippable artifact — is adapted from
-    <a href="https://github.com/rohitg00/ai-engineering-from-scratch">ai-engineering-from-scratch</a>
-    by Rohit Ghumare, which demonstrates the format at 523-lesson scale. The adaptation here is
-    the simulate-and-grade tiers, since system design has fewer things you can implement outright
-    and more things you can only measure or argue about.
+    No claim without a number the lesson produced. The audit script enforces it — a doc quoting
+    figures its own code no longer prints fails the build. That check is why this is not simply a
+    blog post with more sections: every trade-off here terminates in something you can rerun.
   </p>
 
   <h2>Contributing</h2>
