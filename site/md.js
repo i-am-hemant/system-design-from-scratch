@@ -177,15 +177,21 @@
     while (i < lines.length) {
       var line = lines[i];
 
-      // Fenced code
-      var fence = line.match(/^```\s*(\w+)?\s*$/);
+      // Fenced code. Fences may be indented — CommonMark allows up to three
+      // spaces, and a fence nested in a list item is indented further. Matching
+      // only at column 0 silently turned an indented block into inline code,
+      // which then painted 1362px wide inside a 752px column.
+      var fence = line.match(/^([ \t]*)```\s*(\w+)?\s*$/);
       if (fence) {
         flushParagraph(para);
-        var lang = fence[1] || '';
+        var fenceIndent = fence[1].length;
+        var lang = fence[2] || '';
         var buf = [];
         i++;
-        while (i < lines.length && !/^```\s*$/.test(lines[i])) {
-          buf.push(lines[i]);
+        while (i < lines.length && !/^[ \t]*```\s*$/.test(lines[i])) {
+          // Strip the fence's own indentation so nested blocks are not rendered
+          // with phantom leading whitespace.
+          buf.push(lines[i].slice(0, fenceIndent).trim() === '' ? lines[i].slice(fenceIndent) : lines[i]);
           i++;
         }
         i++; // closing fence

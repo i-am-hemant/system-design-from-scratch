@@ -201,11 +201,18 @@ check('non-light svg is not paired',
 // A link target is an injection vector: lesson markdown is injected as innerHTML.
 check('javascript: link is refused', r('[click](javascript:alert(1))'), excludes('javascript:'));
 check('javascript: link degrades to text', r('[click](javascript:alert(1))'), contains('click'));
-check('obfuscated javascript: is refused',
-  r('[x](java\tscript:alert(1))'), excludes('script:alert'));
+// A tab inside the scheme means the link regex does not match, so the source
+// survives as escaped prose. "script:alert" IS present in the output — as inert
+// text. The real assertion is that no anchor element is produced.
+check('obfuscated javascript: produces no link element',
+  r('[x](java\tscript:alert(1))'), excludes('<a '));
 check('vbscript: link is refused', r('[x](vbscript:msgbox)'), excludes('vbscript:'));
-check('data: svg image is refused', r('![x](data:image/svg+xml,<svg onload=alert(1)>)'),
-  excludes('data:image/svg'));
+// Same shape: the raw text is escaped and kept, so the substring is present but
+// harmless. What must not happen is an <img> pointing at an SVG data URL.
+check('data: svg image produces no img element',
+  r('![x](data:image/svg+xml,<svg onload=alert(1)>)'), excludes('<img '));
+check('data: svg text is escaped if it survives',
+  r('![x](data:image/svg+xml,<svg onload=alert(1)>)'), excludes('<svg'));
 check('data: png image is allowed',
   r('![x](data:image/png;base64,iVBORw0KGgo=)'), contains('data:image/png'));
 check('quote in url cannot break the attribute',
@@ -213,4 +220,38 @@ check('quote in url cannot break the attribute',
 check('https link still works', r('[x](https://example.com)'), contains('href="https://example.com"'));
 check('relative link still works', r('[x](../other/doc.md)'), contains('href="../other/doc.md"'));
 
+// Indented fences. A fence nested in a list item is indented, and matching only
+// at column 0 turned the whole block into inline code — which then rendered
+// 1362px wide inside a 752px column instead of scrolling as a <pre>.
+check(
+  'renders an indented fence as a code block',
+  r('- item\n\n  ```\n  nums = [1, 2]\n  ```\n'),
+  contains('<pre><code')
+);
+check(
+  'indented fence does not leak backticks into the text',
+  r('- item\n\n  ```\n  nums = [1, 2]\n  ```\n'),
+  excludes('``')
+);
+check(
+  'indented fence strips its own indentation',
+  r('  ```\n  abc\n  ```\n'),
+  contains('>abc')
+);
+check(
+  'column-0 fences still work',
+  r('```\nplain\n```'),
+  contains('<pre><code')
+);
+check(
+  'indented fence keeps its language class',
+  r('  ```python\n  x = 1\n  ```\n'),
+  contains('language-python')
+);
+
+if (failures.length) {
+  console.error(`md.js: ${failures.length} FAILED, ${pass} passed\n`);
+  for (const f of failures) console.error('  x ' + f + '\n');
+  process.exit(1);
+}
 console.log(`md.js: ${pass} checks passed`);
