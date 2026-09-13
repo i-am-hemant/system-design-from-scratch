@@ -9,7 +9,7 @@ window.CURRICULUM = {
     "designExercises": 1,
     "quizQuestions": 6,
     "words": 1941,
-    "generated": "2026-09-12"
+    "generated": "2026-09-13"
   },
   "phases": [
     {

@@ -688,7 +688,10 @@ a.card:hover {
   grid-template-columns: minmax(0, 1fr) 268px;
   gap: 4.5rem;
   align-items: start;
-  padding: 2.5rem 0 4rem;
+  /* Block padding only. A `padding: 2.5rem 0` shorthand resets the 1.5rem
+     horizontal gutter this element also gets from .wrap, putting text flush
+     against the screen edge on mobile. */
+  padding-block: 2.5rem 4rem;
 }
 
 .lesson-meta {
