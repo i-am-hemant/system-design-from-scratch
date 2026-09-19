@@ -188,6 +188,23 @@ def check_code(audit: Audit, lesson: Path, ltype: str) -> None:
                 )
 
 
+def strip_sections(text: str, names: tuple[str, ...]) -> str:
+    """Drop named H2 sections, so a check can skip parts of a doc that do not apply.
+
+    Headings may be numbered ("## 6. Use it"), so match the same tolerant form the
+    section checker uses.
+    """
+    out, skipping = [], False
+    for line in text.splitlines():
+        m = re.match(r"^##\s+(?:\d+\.\s*)?(.+?)\s*$", line)
+        if m:
+            heading = m.group(1).strip().lower()
+            skipping = any(heading == n.lower() for n in names)
+        if not skipping:
+            out.append(line)
+    return "\n".join(out)
+
+
 def check_doc_claims_match_code(audit: Audit, lesson: Path, text: str) -> None:
     """Every function or class the doc quotes in backticks must exist in the code.
 
@@ -208,10 +225,16 @@ def check_doc_claims_match_code(audit: Audit, lesson: Path, text: str) -> None:
     defined = set(re.findall(r"^\s*(?:def|class)\s+(\w+)", source, re.M))
     defined |= set(re.findall(r"^\s*(\w+)\s*=", source, re.M))
 
+    # 'Use it' and 'Further reading' exist to name OTHER systems' knobs —
+    # HorizontalPodAutoscaler, DesiredCapacity, num_tokens. Those are supposed to
+    # be absent from code/, so checking them turns every real-world mapping into
+    # an error and pushes authors to drop the most useful section in the lesson.
+    checkable = strip_sections(text, ("Use it", "Further reading"))
+
     # Backticked names that look like code: CamelCase types, or snake_case with a
     # call suffix. Bare snake_case words are too often prose to check safely.
-    claimed = set(re.findall(r"`([A-Z][A-Za-z0-9]{2,})(?:\(\))?`", text))
-    claimed |= set(re.findall(r"`([a-z_][a-z0-9_]{2,})\(\)`", text))
+    claimed = set(re.findall(r"`([A-Z][A-Za-z0-9]{2,})(?:\(\))?`", checkable))
+    claimed |= set(re.findall(r"`([a-z_][a-z0-9_]{2,})\(\)`", checkable))
 
     ignore = {
         "CRC", "TTL", "RAM", "API", "HTTP", "JSON", "YAML", "SPREAD", "MODULO",
@@ -236,21 +259,55 @@ def check_doc_output_is_current(audit: Audit, lesson: Path, text: str, run: bool
     if not run:
         return
     code = lesson / "code"
-    main = code / "hashring.py"
-    if not main.is_file():
+    if not code.is_dir():
         return
 
-    # Output blocks are fenced code blocks the doc presents as program output.
-    # Only fenced blocks, and only rows that look like tabular program output:
-    # a label followed by two or more percentages. Prose citing the same figures is
-    # deliberately excluded — it is reworded often and would produce false failures.
-    blocks = re.findall(r"^```[a-z]*\n(.*?)^```", text, re.S | re.M)
+    # The demo script is the non-test .py the doc tells the reader to run. Never
+    # hardcode one lesson's filename here: doing so made this check silently inert
+    # on every other lesson in the repo.
+    candidates = sorted(
+        f
+        for f in code.glob("*.py")
+        if not f.name.startswith("test_") and "__pycache__" not in f.parts
+    )
+    quoted = re.findall(r"^python3 ([\w./-]+\.py)", text, re.M)
+    named = [code / Path(q).name for q in quoted if (code / Path(q).name).is_file()]
+    mains = named or candidates
+    if not mains:
+        return
+    main = mains[0]
+
+    # Output blocks are the fenced blocks a doc presents as program output: UNTAGGED
+    # fences only. Pseudocode is ```text and commands are ```bash, and treating those
+    # as measurements makes lines like "vertical (scaling up) ← ..." look like stale
+    # figures. Walk the lines tracking fence state rather than regexing pairs — a
+    # closing ``` is textually identical to an opening one, so a lazy pattern matches
+    # from one block's close across prose to the next block's open.
     quoted_rows = []
-    for block in blocks:
-        for line in block.splitlines():
-            if len(re.findall(r"\d+\.\d%", line)) >= 2 and not line.lstrip().startswith(">"):
-                quoted_rows.append(line.strip())
+    fence_lang: str | None = None
+    for line in text.splitlines():
+        m = re.match(r"^(\s*)```([A-Za-z0-9]*)\s*$", line)
+        if m:
+            fence_lang = None if fence_lang is not None else m.group(2).lower()
+            continue
+        if fence_lang != "":
+            continue  # outside a fence, or inside a tagged one
+        if line.lstrip().startswith(">"):
+            continue
+        # A measured row is a label plus two or more numbers, or a single-value result
+        # line using '->'. Percentages alone are too narrow: it missed every table
+        # whose figures are prices, multipliers or counts.
+        numbers = re.findall(r"\d+\.\d+|\d+", line)
+        if len(numbers) >= 2 or ("->" in line and numbers):
+            quoted_rows.append(line.strip())
     if not quoted_rows:
+        # "Nothing to verify" is a finding, not a pass: it means the repo's strongest
+        # guard never examined this lesson.
+        audit.warn(
+            lesson,
+            "docs/en.md quotes no measured output rows, so the freshness check "
+            "cannot verify anything — paste the real output table into the doc",
+        )
         return
 
     audit.checks_run += 1

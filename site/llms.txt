@@ -4,7 +4,7 @@
 > number the lesson itself produced, and every design is graded against a rubric.
 > No claim without a number the lesson produced.
 
-Generated 2026-09-13. 1 of 49 planned lessons written.
+Generated 2026-09-19. 2 of 51 planned lessons written.
 
 ## Lesson types
 
@@ -19,15 +19,16 @@ Generated 2026-09-13. 1 of 49 planned lessons written.
 
 The vocabulary and the arithmetic. What the properties mean, what they cost, and the primitives that show up in every later phase.
 
-- Why System Design Is a Separate Skill (design) — planned, not yet written
-- Back-of-Envelope Estimation (concept) — planned, not yet written
-- [Consistent Hashing](https://systemdesignfromscratch.com/lesson?id=01-foundations/03-consistent-hashing) (concept)
-  Adding one server to a modulo-hashed cache moves 81% of your keys. A hash ring moves 20%. Same hardware, same request, one line of different arithmetic.
-- Rate Limiting: Token Bucket to Sliding Window (build) — planned, not yet written
+- Functional versus Non-Functional Requirements (design) — planned, not yet written
+- Back-of-Envelope Calculations (concept) — planned, not yet written
+- The 4-Step Design Framework (design) — planned, not yet written
+- [Vertical and Horizontal Scaling](https://systemdesignfromscratch.com/lesson?id=01-foundations/04-scalability) (concept)
+  In 1986 a CPU doubled in speed every 1.7 years. Since 2015 it takes 20.1. Waiting for faster hardware stopped being an engineering strategy inside one career.
+- Load Balancing: Round Robin to Power of Two Choices (concept) — planned, not yet written
 - Caching Strategies and Eviction (concept) — planned, not yet written
+- Rate Limiting: Token Bucket to Sliding Window (build) — planned, not yet written
 - Backpressure and Load Shedding (concept) — planned, not yet written
 - Circuit Breakers (concept) — planned, not yet written
-- Bloom Filters (concept) — planned, not yet written
 - Why p99 Is Not an Average (simulate) — planned, not yet written
 
 ### Networking and Routing
@@ -52,6 +53,8 @@ Where state lives, how it survives a crash, and what you give up to make it fast
 - Partitioning and Rebalancing (concept) — planned, not yet written
 - Transactions and Isolation Levels (concept) — planned, not yet written
 - Choosing a Datastore (design) — planned, not yet written
+- [Consistent Hashing](https://systemdesignfromscratch.com/lesson?id=03-data-storage/08-consistent-hashing) (concept)
+  Adding one server to a modulo-hashed cache moves 81% of your keys. A hash ring moves 20%. Same hardware, same request, one line of different arithmetic.
 
 ### Distributed Systems
 

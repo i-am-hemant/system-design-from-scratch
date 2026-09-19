@@ -3,7 +3,7 @@
 > Most system design material teaches you to recite answers. This teaches you to derive them.
 > Every trade-off here arrives as a number you can reproduce, not an assertion you have to trust.
 
-**Status: early. One lesson complete as the reference implementation. The curriculum outline is
+**Status: early. Two lessons complete as reference implementations. The curriculum outline is
 being built in the open.**
 
 ## Why this exists
@@ -27,20 +27,21 @@ So this curriculum has four kinds of lesson, matched to what the material actual
 | Kind | What you get | Why |
 | --- | --- | --- |
 | **Concept** | The idea, a measured result, a script to run | Most of system design. Knowing *when to shard* matters; hand-writing a hash ring does not. You read the mechanism as pseudocode and run the measurement |
-| **Build** | Step-by-step implementation | Reserved for the few where writing it *is* the insight: Raft, rate limiting under real concurrency, write-ahead logs. Six of forty-nine lessons |
+| **Build** | Step-by-step implementation | Reserved for the few where writing it *is* the insight: Raft, rate limiting under real concurrency, write-ahead logs. Six of fifty lessons |
 | **Simulate** | A measurable experiment | You can't build DynamoDB in a lesson. You *can* simulate load and watch p99 move when you add a cache — trade-offs become numbers you generated |
 | **Design** | A written design, self-scored | Some judgement has no unit test. These ship a rubric, a set of traps, and a reference direction — not a hidden right answer |
 
 The rule for every lesson: **no claim without a number the lesson produced.** The audit script
 enforces it — a doc holding figures its code no longer prints fails CI.
 
-## The reference lesson
+## The reference lessons
 
-[`phases/01-foundations/03-consistent-hashing`](phases/01-foundations/03-consistent-hashing) is
-complete and shows the intended shape:
+[`phases/01-foundations/04-scalability`](phases/01-foundations/04-scalability) and
+[`phases/03-data-storage/08-consistent-hashing`](phases/03-data-storage/08-consistent-hashing) are
+complete and show the intended shape:
 
 ```
-03-consistent-hashing/
+08-consistent-hashing/
 ├── docs/en.md          the lesson
 ├── code/
 │   ├── hashring.py     Modulo + Ring behind one interface, ~40 lines of logic
@@ -52,25 +53,29 @@ complete and shows the intended shape:
 Try it:
 
 ```bash
-cd phases/01-foundations/03-consistent-hashing
+cd phases/03-data-storage/08-consistent-hashing
 python3 code/hashring.py                        # see 81% vs 20% for yourself
 python3 -m unittest discover -s code -q         # trade-off assertions
+
+cd ../../01-foundations/04-scalability
+python3 code/scaling.py                         # see what 64 machines actually buy
+python3 -m unittest discover -s code -q
 ```
 
-Or read it on the site, served with production routing:
+Or read them on the site, served with production routing:
 
 ```bash
 node scripts/serve.js   # http://localhost:8080
 ```
 
-Real output:
+Real output, pasted from the run:
 
 ```
-CHANGE           MODULO   RING    IDEAL   RING vs MODULO
-2 -> 3 nodes     66.9%    34.3%   33.3%   2.0x better
-4 -> 5 nodes     81.0%    25.1%   20.0%   3.2x better
-8 -> 9 nodes     89.2%     7.8%   11.1%   11.4x better
-64 -> 65 nodes   98.5%     1.1%    1.5%   86.4x better
+CHANGE            MODULO    RING   IDEAL   RING vs MODULO
+2 -> 3 nodes      66.9%   34.3%   33.3%   2.0x better
+4 -> 5 nodes      81.0%   25.1%   20.0%   3.2x better
+8 -> 9 nodes      89.2%    7.8%   11.1%   11.4x better
+64 -> 65 nodes    98.5%    1.1%    1.5%   86.4x better
 ```
 
 Note what that table does: it makes the *shape* of the improvement visible. Modulo gets worse as

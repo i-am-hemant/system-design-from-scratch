@@ -1,0 +1,100 @@
+{
+  "questions": [
+    {
+      "stage": "pre",
+      "question": "You upgrade an app server from 16 vCPUs to 96 vCPUs within the same general purpose instance family. What happens to your cost per vCPU?",
+      "options": [
+        "It stays flat \u2014 within the commodity range you pay exactly pro rata",
+        "It roughly doubles, because larger machines carry a size premium",
+        "It falls, because larger instances get volume discounts",
+        "It rises exponentially at every step up the ladder"
+      ],
+      "correct": 0,
+      "explanation": "Measured on EC2 on-demand, the m7i family charges $0.0504 per vCPU-hour at every size from 2 to 192 vCPUs. Scaling up inside the commodity range costs exactly proportionally. The escalation is real but it starts above that ceiling: the specialised high-memory families cost 2.78x, 4.00x and 6.00x the same rate. Knowing where the cliff begins matters, because below it the 'vertical is expensive' objection does not apply."
+    },
+    {
+      "stage": "pre",
+      "question": "Which claim about hardware performance since 2005 is accurate?",
+      "options": [
+        "Moore's law ended, so transistor counts stopped growing",
+        "Dennard scaling ended, so extra transistors became more cores rather than faster ones",
+        "Both ended together in 2005 and clock speeds have fallen since",
+        "Single-thread performance still doubles every two years, just at higher cost"
+      ],
+      "correct": 1,
+      "explanation": "Moore's observation was about transistor count per die, and that largely continued. Dennard scaling \u2014 the property that a smaller transistor could also run at lower voltage, holding power density flat \u2014 ended around 2005. After that, extra transistors could not buy a faster single core, so they bought more cores. Measured single-thread growth fell from 52%/year (1986-2003) to 3.5%/year (2015-): a doubling time of 1.7 years against 20.1. The consequence for scaling up is that 'a bigger machine' now means 'more cores', which only helps a program that can use them."
+    },
+    {
+      "stage": "check",
+      "question": "A service stores each user's session in the memory of the server that handled their login. You add a second server behind a round-robin load balancer. What do users experience?",
+      "options": [
+        "Nothing changes \u2014 the load balancer keeps each user on their original server by default",
+        "Roughly half of their requests hit a server that has never seen their session, so they are asked to log in again",
+        "Sessions replicate between the two servers automatically",
+        "Slightly higher latency, but sessions are unaffected"
+      ],
+      "correct": 1,
+      "explanation": "This is the single biggest obstacle to scaling out, and it is not a rare edge case \u2014 with two servers and round-robin, about half of all requests land on the wrong one. The fix is stateless design: move the session out of server memory, either into a signed token the client carries (a JWT any server can verify without asking anyone) or into a shared store. Sticky sessions appear to fix it while pinning each user to a single point of failure."
+    },
+    {
+      "stage": "check",
+      "question": "A workload is 5% serial. You run it on 64 servers. What speedup does Amdahl's law predict, and why does it matter before you buy?",
+      "options": [
+        "About 61x \u2014 you lose only the 5% that cannot be parallelised",
+        "About 15.4x \u2014 under a quarter of the capacity you are paying for",
+        "About 32x \u2014 overhead scales with server count, halving the gain",
+        "About 20x, which is also the limit for any number of servers"
+      ],
+      "correct": 1,
+      "explanation": "S(N) = 1/(s + (1-s)/N) gives 15.4x at N=64, s=0.05. The 20x in the last option is the ceiling 1/s that infinite servers approach but never reach, so it is wrong for N=64 while being the number worth remembering. 5% serial is not pathological \u2014 one shared counter or one leader assigning work is enough. This is why every scaling proposal should state its estimated s: 1/s is where the money stops working."
+    },
+    {
+      "stage": "check",
+      "question": "Which of these is NOT a complexity you take on by scaling out?",
+      "options": [
+        "Service discovery, because servers come and go under autoscaling",
+        "Centralised logging, because one request's story is split across N machines",
+        "A slow O(n\u00b2) query, which more servers will not fix",
+        "Distributed cache consistency, because N in-process caches drift apart"
+      ],
+      "correct": 2,
+      "explanation": "The other three are direct consequences of having many servers instead of one, alongside load balancing, data consistency, and the local state problem. A slow algorithm is a different category: scaling divides the volume of work, never the cost of each unit, so an O(n\u00b2) query on 10 servers is still O(n\u00b2). Profile first \u2014 a 10x algorithmic win is cheaper than 10 servers and needs no load balancer."
+    },
+    {
+      "stage": "post",
+      "question": "Your primary database is CPU-bound at peak. The app tier is stateless and already autoscaling. What is the usual next move, and why?",
+      "options": [
+        "Shard the database immediately \u2014 horizontal scaling is the correct answer for a bottleneck",
+        "Scale the database up, even at a premium per vCPU, because sharding is the most expensive change a system can make",
+        "Add more app servers, since they front the database",
+        "Add read replicas, which will absorb the write load"
+      ],
+      "correct": 1,
+      "explanation": "This is the hybrid split: app servers out, database up as far as it goes. One consistent writer is the easiest correct thing to operate, and sharding is a migration that risks your data \u2014 so paying the 2.78x per-vCPU premium to postpone it is usually the cheaper decision. Read replicas help reads only and do nothing for a write-bound primary. More app servers add pressure to the bottleneck rather than relieving it."
+    },
+    {
+      "stage": "post",
+      "question": "Which capability does horizontal scaling provide that vertical scaling structurally cannot?",
+      "options": [
+        "Higher throughput for a single request",
+        "Simpler debugging and monitoring",
+        "Autoscaling with traffic, plus geographic distribution and fault tolerance",
+        "Lower cost per unit of compute at every size"
+      ],
+      "correct": 2,
+      "explanation": "Interchangeable servers can be added when traffic rises and removed when it falls, can sit in different regions to serve local users, and mean a failure costs a fraction of capacity instead of everything. None of that is available to one machine: it has one location, one failure domain, and cannot be resized every ten minutes. Simpler debugging is vertical scaling's advantage, and a single request usually gets marginally slower behind a load balancer, not faster."
+    },
+    {
+      "stage": "post",
+      "question": "Your team's plan says 'add servers until latency is acceptable'. Which single missing number most weakens the plan?",
+      "options": [
+        "The per-instance price, so the monthly bill can be forecast",
+        "The estimated serial fraction s, because 1/s is the server count past which more servers buy nothing",
+        "The p99 latency target, since scaling decisions follow from SLOs",
+        "Current CPU utilisation, to know how much headroom is left"
+      ],
+      "correct": 1,
+      "explanation": "The others are all worth knowing but none of them bounds the plan. Without an estimate of s, 'add servers until it is fast enough' can run far past the ceiling 1/s: at s=0.20 the ceiling is 5x, so going from 64 servers to 1024 moves you from 4.7x to 5.0x \u2014 sixteen times the bill for 6% more throughput. Naming s turns an open-ended plan into a bounded one. Worse, once crosstalk between servers is counted, throughput can decrease past some size rather than merely flattening."
+    }
+  ]
+}

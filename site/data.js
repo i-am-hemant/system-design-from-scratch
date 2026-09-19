@@ -2,14 +2,14 @@
 window.CURRICULUM = {
   "stats": {
     "phases": 7,
-    "lessonsPlanned": 49,
-    "lessonsAvailable": 1,
-    "withCode": 1,
-    "withTests": 1,
+    "lessonsPlanned": 51,
+    "lessonsAvailable": 2,
+    "withCode": 2,
+    "withTests": 2,
     "designExercises": 1,
-    "quizQuestions": 6,
-    "words": 1941,
-    "generated": "2026-09-13"
+    "quizQuestions": 14,
+    "words": 5030,
+    "generated": "2026-09-19"
   },
   "phases": [
     {
@@ -18,9 +18,9 @@ window.CURRICULUM = {
       "title": "Foundations",
       "lessons": [
         {
-          "slug": "01-why-system-design",
+          "slug": "01-requirements",
           "num": 1,
-          "title": "Why System Design Is a Separate Skill",
+          "title": "Functional versus Non-Functional Requirements",
           "type": "design",
           "available": false,
           "sections": [],
@@ -30,7 +30,7 @@ window.CURRICULUM = {
         {
           "slug": "02-estimation",
           "num": 2,
-          "title": "Back-of-Envelope Estimation",
+          "title": "Back-of-Envelope Calculations",
           "type": "concept",
           "available": false,
           "sections": [],
@@ -38,46 +38,60 @@ window.CURRICULUM = {
           "quizCount": 0
         },
         {
-          "slug": "03-consistent-hashing",
+          "slug": "03-design-framework",
           "num": 3,
-          "title": "Consistent Hashing",
-          "hook": "Adding one server to a modulo-hashed cache moves 81% of your keys. A hash ring moves 20%. Same hardware, same request, one line of different arithmetic.",
+          "title": "The 4-Step Design Framework",
+          "type": "design",
+          "available": false,
+          "sections": [],
+          "designs": [],
+          "quizCount": 0
+        },
+        {
+          "slug": "04-scalability",
+          "num": 4,
+          "title": "Vertical and Horizontal Scaling",
+          "hook": "In 1986 a CPU doubled in speed every 1.7 years. Since 2015 it takes 20.1. Waiting for faster hardware stopped being an engineering strategy inside one career.",
           "type": "concept",
           "language": null,
-          "time": "~45 minutes",
-          "prerequisites": "Lesson 01 (why system design), Lesson 02 (estimation)",
+          "time": "~40 minutes",
+          "prerequisites": "Lesson 01 (functional vs non-functional requirements), Lesson 02 (back-of-envelope calculations)",
           "sections": [
             {
               "title": "Learning objectives",
               "id": "learning-objectives"
             },
             {
-              "title": "1. The problem",
-              "id": "1-the-problem"
+              "title": "1. Two ways to handle more load",
+              "id": "1-two-ways-to-handle-more-load"
             },
             {
-              "title": "2. The idea",
-              "id": "2-the-idea"
+              "title": "2. Vertical scaling: making the existing server more powerful",
+              "id": "2-vertical-scaling-making-the-existing-server-more-powerful"
             },
             {
-              "title": "3. Why the churn is 1/N",
-              "id": "3-why-the-churn-is-1n"
+              "title": "3. Horizontal scaling: adding more servers of the same size",
+              "id": "3-horizontal-scaling-adding-more-servers-of-the-same-size"
             },
             {
-              "title": "4. Virtual nodes, and why they are not optional",
-              "id": "4-virtual-nodes-and-why-they-are-not-optional"
+              "title": "4. The hybrid approach, which is what production actually looks like",
+              "id": "4-the-hybrid-approach-which-is-what-production-actually-looks-like"
             },
             {
-              "title": "5. Run it",
-              "id": "5-run-it"
+              "title": "5. The trade-off this lesson teaches: N servers do not give you N times the throughput",
+              "id": "5-the-trade-off-this-lesson-teaches-n-servers-do-not-give-you-n-times-the-throughput"
             },
             {
-              "title": "6. Use it",
-              "id": "6-use-it"
+              "title": "6. Run it",
+              "id": "6-run-it"
             },
             {
-              "title": "7. What consistent hashing does *not* solve",
-              "id": "7-what-consistent-hashing-does-not-solve"
+              "title": "7. Use it",
+              "id": "7-use-it"
+            },
+            {
+              "title": "8. What scaling does *not* solve",
+              "id": "8-what-scaling-does-not-solve"
             },
             {
               "title": "Exercises",
@@ -92,34 +106,28 @@ window.CURRICULUM = {
               "id": "further-reading"
             }
           ],
-          "words": 1941,
-          "docPath": "phases/01-foundations/03-consistent-hashing/docs/en.md",
+          "words": 3089,
+          "docPath": "phases/01-foundations/04-scalability/docs/en.md",
           "hasCode": true,
           "hasTests": true,
           "goFileCount": 2,
-          "designs": [
-            {
-              "file": "sharding-a-session-store.md",
-              "title": "Design exercise: sharding a session store",
-              "path": "phases/01-foundations/03-consistent-hashing/design/sharding-a-session-store.md"
-            }
-          ],
-          "quizCount": 6,
+          "designs": [],
+          "quizCount": 8,
           "available": true
         },
         {
-          "slug": "04-rate-limiting",
-          "num": 4,
-          "title": "Rate Limiting: Token Bucket to Sliding Window",
-          "type": "build",
+          "slug": "05-load-balancing",
+          "num": 5,
+          "title": "Load Balancing: Round Robin to Power of Two Choices",
+          "type": "concept",
           "available": false,
           "sections": [],
           "designs": [],
           "quizCount": 0
         },
         {
-          "slug": "05-caching-strategies",
-          "num": 5,
+          "slug": "06-caching-strategies",
+          "num": 6,
           "title": "Caching Strategies and Eviction",
           "type": "concept",
           "available": false,
@@ -128,8 +136,18 @@ window.CURRICULUM = {
           "quizCount": 0
         },
         {
-          "slug": "06-backpressure",
-          "num": 6,
+          "slug": "07-rate-limiting",
+          "num": 7,
+          "title": "Rate Limiting: Token Bucket to Sliding Window",
+          "type": "build",
+          "available": false,
+          "sections": [],
+          "designs": [],
+          "quizCount": 0
+        },
+        {
+          "slug": "08-backpressure",
+          "num": 8,
           "title": "Backpressure and Load Shedding",
           "type": "concept",
           "available": false,
@@ -138,8 +156,8 @@ window.CURRICULUM = {
           "quizCount": 0
         },
         {
-          "slug": "07-circuit-breakers",
-          "num": 7,
+          "slug": "09-circuit-breakers",
+          "num": 9,
           "title": "Circuit Breakers",
           "type": "concept",
           "available": false,
@@ -148,18 +166,8 @@ window.CURRICULUM = {
           "quizCount": 0
         },
         {
-          "slug": "08-bloom-filters",
-          "num": 8,
-          "title": "Bloom Filters",
-          "type": "concept",
-          "available": false,
-          "sections": [],
-          "designs": [],
-          "quizCount": 0
-        },
-        {
-          "slug": "09-latency-percentiles",
-          "num": 9,
+          "slug": "10-latency-percentiles",
+          "num": 10,
           "title": "Why p99 Is Not an Average",
           "type": "simulate",
           "available": false,
@@ -312,6 +320,76 @@ window.CURRICULUM = {
           "sections": [],
           "designs": [],
           "quizCount": 0
+        },
+        {
+          "slug": "08-consistent-hashing",
+          "num": 8,
+          "title": "Consistent Hashing",
+          "hook": "Adding one server to a modulo-hashed cache moves 81% of your keys. A hash ring moves 20%. Same hardware, same request, one line of different arithmetic.",
+          "type": "concept",
+          "language": null,
+          "time": "~45 minutes",
+          "prerequisites": "Lesson 01 (why system design), Lesson 02 (estimation)",
+          "sections": [
+            {
+              "title": "Learning objectives",
+              "id": "learning-objectives"
+            },
+            {
+              "title": "1. The problem",
+              "id": "1-the-problem"
+            },
+            {
+              "title": "2. The idea",
+              "id": "2-the-idea"
+            },
+            {
+              "title": "3. Why the churn is 1/N",
+              "id": "3-why-the-churn-is-1n"
+            },
+            {
+              "title": "4. Virtual nodes, and why they are not optional",
+              "id": "4-virtual-nodes-and-why-they-are-not-optional"
+            },
+            {
+              "title": "5. Run it",
+              "id": "5-run-it"
+            },
+            {
+              "title": "6. Use it",
+              "id": "6-use-it"
+            },
+            {
+              "title": "7. What consistent hashing does *not* solve",
+              "id": "7-what-consistent-hashing-does-not-solve"
+            },
+            {
+              "title": "Exercises",
+              "id": "exercises"
+            },
+            {
+              "title": "Key terms",
+              "id": "key-terms"
+            },
+            {
+              "title": "Further reading",
+              "id": "further-reading"
+            }
+          ],
+          "words": 1941,
+          "docPath": "phases/03-data-storage/08-consistent-hashing/docs/en.md",
+          "hasCode": true,
+          "hasTests": true,
+          "goFileCount": 2,
+          "designs": [
+            {
+              "file": "sharding-a-session-store.md",
+              "title": "Design exercise: sharding a session store",
+              "path": "phases/03-data-storage/08-consistent-hashing/design/sharding-a-session-store.md"
+            }
+          ],
+          "quizCount": 6,
+          "available": true
         }
       ],
       "summary": "Where state lives, how it survives a crash, and what you give up to make it fast."

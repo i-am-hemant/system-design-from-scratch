@@ -117,7 +117,7 @@ check(
 );
 check(
   'llms.txt links the written lesson',
-  llms.includes('/lesson?id=01-foundations/03-consistent-hashing')
+  llms.includes('/lesson?id=03-data-storage/08-consistent-hashing')
 );
 
 // --- sitemap only lists real pages ---------------------------------------

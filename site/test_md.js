@@ -146,8 +146,8 @@ const lessonPath = path.join(
   __dirname,
   '..',
   'phases',
-  '01-foundations',
-  '03-consistent-hashing',
+  '03-data-storage',
+  '08-consistent-hashing',
   'docs',
   'en.md'
 );
