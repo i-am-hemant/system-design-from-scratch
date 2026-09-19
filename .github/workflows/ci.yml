@@ -25,6 +25,17 @@ jobs:
         with:
           python-version: '3.13'
 
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install Node dependencies
+        # Only wrangler, for the deploy-config check below. The site itself has
+        # no runtime dependencies.
+        run: npm ci
+
       - name: Run every lesson's tests
         # Lessons are stdlib-only and independently runnable, so no install step.
         # Each code/ directory is discovered and tested on its own.
@@ -55,6 +66,12 @@ jobs:
 
       - name: Test site build artifacts
         run: node site/test_site.js
+
+      - name: Validate the deploy config
+        # Catches a broken wrangler.jsonc (bad compatibility_date, wrong assets
+        # directory) here rather than at deploy time, and confirms _headers
+        # parses — a malformed rule is skipped silently in production.
+        run: npx wrangler deploy --dry-run
 
       - name: Fail if the build left the site dirty
         # data.js, llms.txt and sitemap.xml are committed. If building changes

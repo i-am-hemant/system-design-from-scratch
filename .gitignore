@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .DS_Store
 node_modules/
+# Wrangler's local state and build cache.
+.wrangler/

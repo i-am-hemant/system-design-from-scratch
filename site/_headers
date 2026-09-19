@@ -1,15 +1,15 @@
-# Cloudflare Pages response headers. Parsed by Pages, never served as an asset.
+# Cloudflare Workers static-asset response headers. Parsed by Workers, never
+# served as an asset (and listed in .assetsignore so it is not uploaded).
 #
-# Pages already sends X-Content-Type-Options: nosniff and
-# Referrer-Policy: strict-origin-when-cross-origin on every asset, so those are
-# not repeated here. What Pages does NOT get right for this site:
+# Workers already sends Content-Type and an ETag, plus
+# Cache-Control: public, max-age=0, must-revalidate on every asset. What that
+# default does NOT get right for this site:
 #
 #   - llms.txt is served as text/plain, but it is markdown meant for agents
-#   - the default Cache-Control is max-age=0, must-revalidate for everything,
-#     which is correct for HTML and data.js but wasteful for style.css/app.js
+#   - must-revalidate on style.css/app.js costs a round trip per page view
 #
-# Deployments purge the Cloudflare edge cache, so long browser TTLs on static
-# assets are safe: a new deploy changes the Etag and the CDN copy.
+# A deploy replaces the assets and changes their ETags, so long browser TTLs on
+# static files are safe.
 
 /llms.txt
   Content-Type: text/markdown; charset=utf-8
@@ -31,11 +31,15 @@
 
 # The lesson page injects rendered markdown as innerHTML and loads KaTeX and
 # Mermaid from jsdelivr, so scripts and styles are restricted to self + that CDN.
+# Pages sent nosniff and Referrer-Policy by default; Workers does not, so both
+# are set explicitly here.
 /*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https://raw.githubusercontent.com; connect-src 'self' https://raw.githubusercontent.com; frame-ancestors 'none'
   X-Frame-Options: DENY
   Permissions-Policy: geolocation=(), microphone=(), camera=()
 
-# Preview deployments must never outrank the custom domain in search results.
-https://:project.pages.dev/*
+# Preview and workers.dev URLs must never outrank the custom domain in search.
+https://:worker.:subdomain.workers.dev/*
   X-Robots-Tag: noindex

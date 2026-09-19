@@ -1,0 +1,12 @@
+# Files in site/ that are tooling, not public assets. Same format as .gitignore.
+#
+# Without this, Wrangler uploads the build script and the test suites as
+# publicly fetchable files. They are not secret, but they are not the site
+# either, and /build.js returning source is a needless surface.
+#
+# _headers is parsed by Workers, never served — listing it here is Cloudflare's
+# own documented practice.
+build.js
+test_md.js
+test_site.js
+_headers

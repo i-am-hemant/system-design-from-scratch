@@ -1,0 +1,15 @@
+{
+  "name": "system-design-from-scratch",
+  "private": true,
+  "description": "Build the site and deploy it to Cloudflare Workers static assets.",
+  "scripts": {
+    "build": "node site/build.js",
+    "test": "node site/test_md.js && node site/test_site.js",
+    "serve": "node scripts/serve.js",
+    "deploy": "node site/build.js && wrangler deploy",
+    "preview": "node site/build.js && wrangler versions upload"
+  },
+  "devDependencies": {
+    "wrangler": "4.135.0"
+  }
+}

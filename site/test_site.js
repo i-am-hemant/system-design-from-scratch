@@ -154,24 +154,73 @@ for (const page of ['index.html', 'catalog.html', 'about.html', 'lesson.html', '
   check(`${page} declares a title`, /<title>[^<]+<\/title>/.test(html));
 }
 
-// --- Cloudflare Pages deploy invariants ----------------------------------
+// --- Cloudflare Workers deploy invariants ---------------------------------
 //
-// These are not cosmetic. Pages infers behaviour from the presence of files, so
-// deleting one silently changes how the whole site is served.
+// These are not cosmetic. Workers infers serving behaviour from wrangler.jsonc
+// and from the presence of files, so a small edit here changes how the whole
+// site is served.
 
-// Without a top-level 404.html, Pages decides the project is a single-page app
-// and serves index.html — with a 200 — for every unknown path. Typos and dead
-// links would then look like the homepage, and crawlers would index duplicates.
+const wranglerPath = path.join(REPO, 'wrangler.jsonc');
+check('wrangler.jsonc exists', fs.existsSync(wranglerPath));
+if (fs.existsSync(wranglerPath)) {
+  // Strip // comments so the jsonc file can be parsed. Only line comments are
+  // used, and no string in the file contains "//".
+  const raw = fs.readFileSync(wranglerPath, 'utf8');
+  const wrangler = JSON.parse(raw.replace(/^\s*\/\/.*$/gm, ''));
+
+  check(
+    'wrangler serves ./site',
+    wrangler.assets && wrangler.assets.directory === './site',
+    JSON.stringify(wrangler.assets)
+  );
+
+  // The default for a project with no 404.html is "single-page-application",
+  // which answers every unknown path with index.html and a 200 OK. Dead links
+  // would render as the homepage and crawlers would index duplicates of it.
+  check(
+    'not_found_handling is 404-page, not SPA',
+    wrangler.assets && wrangler.assets.not_found_handling === '404-page',
+    String(wrangler.assets && wrangler.assets.not_found_handling)
+  );
+
+  // No "main" means no Worker script, so no request is billable and there is no
+  // server-side code path to audit.
+  check('no Worker script (static assets only)', !wrangler.main);
+
+  check(
+    'compatibility_date is pinned',
+    /^\d{4}-\d{2}-\d{2}$/.test(wrangler.compatibility_date || ''),
+    String(wrangler.compatibility_date)
+  );
+}
+
+// Without this file Workers has nothing to serve for an unknown path and falls
+// back to a null-body 404.
 check(
-  'site/404.html exists (absence turns Pages into SPA mode)',
+  'site/404.html exists (not_found_handling needs it)',
   fs.existsSync(path.join(SITE, '404.html'))
 );
+
+// site/ holds the build script and test suites next to the real assets, so
+// without .assetsignore they are uploaded and publicly fetchable.
+const ignorePath = path.join(SITE, '.assetsignore');
+check('site/.assetsignore exists', fs.existsSync(ignorePath));
+if (fs.existsSync(ignorePath)) {
+  const ignored = fs
+    .readFileSync(ignorePath, 'utf8')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('#'));
+  for (const f of ['build.js', 'test_md.js', 'test_site.js', '_headers']) {
+    check(`.assetsignore excludes ${f}`, ignored.includes(f));
+  }
+}
 
 const headersPath = path.join(SITE, '_headers');
 check('site/_headers exists', fs.existsSync(headersPath));
 if (fs.existsSync(headersPath)) {
   const headers = fs.readFileSync(headersPath, 'utf8');
-  // Pages serves .txt as text/plain; llms.txt is markdown for agents.
+  // Workers serves .txt as text/plain; llms.txt is markdown for agents.
   check(
     '_headers serves llms.txt as markdown',
     /^\/llms\.txt$/m.test(headers) && /Content-Type:\s*text\/markdown/.test(headers)
@@ -181,11 +230,17 @@ if (fs.existsSync(headersPath)) {
     '_headers keeps data.js revalidated',
     /^\/data\.js$/m.test(headers) && /no-cache/.test(headers)
   );
-  // Rule lines must be indented under their path, or Pages ignores them.
+  // Rule lines must be indented under their path, or Workers ignores them.
   const badRule = headers
     .split('\n')
     .some((l) => /^[A-Za-z-]+:\s/.test(l) && !/^(https?):/.test(l));
   check('_headers rules are indented under their path', !badRule);
+  // The lesson page fetches markdown and figures from raw.githubusercontent.com
+  // and loads KaTeX/Mermaid from jsdelivr. A CSP that forgets either renders
+  // every lesson blank.
+  const csp = (headers.match(/Content-Security-Policy:([^\n]*)/) || [])[1] || '';
+  check('CSP allows the lesson markdown source', csp.includes('raw.githubusercontent.com'), csp);
+  check('CSP allows the KaTeX/Mermaid CDN', csp.includes('cdn.jsdelivr.net'), csp);
 }
 
 // Canonical host must be consistent: a split canonical splits search ranking.

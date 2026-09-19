@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "system-design-from-scratch",
+  // Pinning this pins Workers runtime behaviour; bumping it is an opt-in
+  // decision, never automatic. Must not be a future date in UTC terms.
+  "compatibility_date": "2026-09-01",
+
+  // Static-assets-only Worker: there is no "main", so no Worker script runs and
+  // no request is billable. The curriculum is plain HTML plus a build step that
+  // regenerates data.js/llms.txt/sitemap.xml from phases/ on disk.
+  "assets": {
+    "directory": "./site",
+
+    // Serve the real 404.html with a 404 status. The alternative,
+    // "single-page-application", would answer every unknown path with
+    // index.html and a 200 — dead links would render as the homepage and
+    // crawlers would index duplicates of it.
+    "not_found_handling": "404-page",
+
+    // /about resolves to about.html and is served without a trailing slash,
+    // which is what the site's own internal links assume.
+    "html_handling": "auto-trailing-slash"
+  }
+}
