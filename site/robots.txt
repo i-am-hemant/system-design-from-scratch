@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://systemdesignfromscratch.com/sitemap.xml
+Sitemap: https://sysdesign.hemantfaujdar.com/sitemap.xml

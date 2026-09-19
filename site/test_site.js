@@ -135,7 +135,13 @@ check(
 
 // --- pages reference only local files that exist -------------------------
 
-for (const page of ['index.html', 'catalog.html', 'about.html', 'lesson.html']) {
+for (const page of ['index.html', 'catalog.html', 'about.html', 'lesson.html', '404.html']) {
+  // A missing page is reported by its own existence check below; crashing here
+  // would hide every remaining failure behind a stack trace.
+  if (!fs.existsSync(path.join(SITE, page))) {
+    check(`site/${page} exists`, false);
+    continue;
+  }
   const html = fs.readFileSync(path.join(SITE, page), 'utf8');
   const refs = [
     ...html.matchAll(/(?:src|href)="(?!https?:|data:|#|\/lesson|\/catalog|\/about|\/llms|\/)([^"]+)"/g),
@@ -147,6 +153,56 @@ for (const page of ['index.html', 'catalog.html', 'about.html', 'lesson.html']) 
   check(`${page} has a skip link`, html.includes('skip-link'));
   check(`${page} declares a title`, /<title>[^<]+<\/title>/.test(html));
 }
+
+// --- Cloudflare Pages deploy invariants ----------------------------------
+//
+// These are not cosmetic. Pages infers behaviour from the presence of files, so
+// deleting one silently changes how the whole site is served.
+
+// Without a top-level 404.html, Pages decides the project is a single-page app
+// and serves index.html — with a 200 — for every unknown path. Typos and dead
+// links would then look like the homepage, and crawlers would index duplicates.
+check(
+  'site/404.html exists (absence turns Pages into SPA mode)',
+  fs.existsSync(path.join(SITE, '404.html'))
+);
+
+const headersPath = path.join(SITE, '_headers');
+check('site/_headers exists', fs.existsSync(headersPath));
+if (fs.existsSync(headersPath)) {
+  const headers = fs.readFileSync(headersPath, 'utf8');
+  // Pages serves .txt as text/plain; llms.txt is markdown for agents.
+  check(
+    '_headers serves llms.txt as markdown',
+    /^\/llms\.txt$/m.test(headers) && /Content-Type:\s*text\/markdown/.test(headers)
+  );
+  // data.js is regenerated on every build; a cached copy misstates the catalog.
+  check(
+    '_headers keeps data.js revalidated',
+    /^\/data\.js$/m.test(headers) && /no-cache/.test(headers)
+  );
+  // Rule lines must be indented under their path, or Pages ignores them.
+  const badRule = headers
+    .split('\n')
+    .some((l) => /^[A-Za-z-]+:\s/.test(l) && !/^(https?):/.test(l));
+  check('_headers rules are indented under their path', !badRule);
+}
+
+// Canonical host must be consistent: a split canonical splits search ranking.
+const SITE_HOST = 'sysdesign.hemantfaujdar.com';
+for (const f of ['index.html', 'catalog.html', 'about.html', 'lesson.html', 'robots.txt', 'sitemap.xml', 'llms.txt']) {
+  const text = fs.readFileSync(path.join(SITE, f), 'utf8');
+  const hosts = [...text.matchAll(/https:\/\/([a-z0-9.-]*from-?scratch[a-z0-9.-]*)/gi)].map((m) => m[1]);
+  check(
+    `${f} points at ${SITE_HOST}, not a stale domain`,
+    hosts.every((h) => h.endsWith('github.com') || h.endsWith('githubusercontent.com')),
+    hosts.join(', ')
+  );
+}
+check(
+  'robots.txt advertises the sitemap on the canonical host',
+  fs.readFileSync(path.join(SITE, 'robots.txt'), 'utf8').includes(`https://${SITE_HOST}/sitemap.xml`)
+);
 
 // --- report ---------------------------------------------------------------
 

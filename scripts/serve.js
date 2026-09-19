@@ -6,12 +6,20 @@
  *   node scripts/serve.js --port 3000
  *
  * Why this exists: `python3 -m http.server` serves raw files, so the clean URLs
- * declared in vercel.json (/catalog, /about, /lesson) return 404 locally while
- * working in production. Testing against a server that routes differently from
+ * the host produces (/catalog, /about, /lesson) return 404 locally while working
+ * in production. Testing against a server that routes differently from
  * production is how routing bugs reach users.
  *
- * Routing is READ FROM vercel.json rather than duplicated here, so the two
- * cannot drift apart.
+ * Production is Cloudflare Pages, whose routing is implicit rather than
+ * declared in a config file:
+ *
+ *   - /about resolves to /about.html, and /about.html REDIRECTS to /about
+ *   - an unmatched path serves /404.html with a 404 status (and only behaves
+ *     like a single-page app if no top-level 404.html exists, which is why
+ *     site/404.html must stay)
+ *
+ * Those two rules are reimplemented below. There is no config file to read, so
+ * a change in Pages behaviour has to be mirrored here by hand.
  */
 
 'use strict';
@@ -23,7 +31,6 @@ const { execFileSync } = require('child_process');
 
 const REPO = path.resolve(__dirname, '..');
 const SITE = path.join(REPO, 'site');
-const VERCEL = path.join(REPO, 'vercel.json');
 
 const args = process.argv.slice(2);
 const portIdx = args.indexOf('--port');
@@ -42,32 +49,11 @@ const MIME = {
   '.md': 'text/markdown; charset=utf-8',
 };
 
-function loadRewrites() {
-  try {
-    const cfg = JSON.parse(fs.readFileSync(VERCEL, 'utf8'));
-    return {
-      rewrites: cfg.rewrites || [],
-      cleanUrls: cfg.cleanUrls === true,
-    };
-  } catch (err) {
-    console.warn('warning: could not read vercel.json (' + err.message + ')');
-    return { rewrites: [], cleanUrls: false };
-  }
-}
-
-const { rewrites, cleanUrls } = loadRewrites();
-
 function resolvePath(pathname) {
-  // 1. Explicit rewrites from vercel.json.
-  for (const rule of rewrites) {
-    if (rule.source === pathname) return rule.destination;
-  }
-
-  // 2. Root.
   if (pathname === '/') return '/index.html';
 
-  // 3. cleanUrls: /about -> /about.html
-  if (cleanUrls && !path.extname(pathname)) {
+  // Pages maps an extensionless path to its .html file.
+  if (!path.extname(pathname)) {
     const candidate = pathname.replace(/\/$/, '') + '.html';
     if (fs.existsSync(path.join(SITE, candidate))) return candidate;
   }
@@ -90,19 +76,26 @@ function locate(urlPath) {
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
+
+  // Pages redirects /about.html to /about, so a link written with the extension
+  // must not appear to work locally.
+  if (/\.html$/.test(url.pathname)) {
+    const clean = url.pathname === '/index.html' ? '/' : url.pathname.replace(/\.html$/, '');
+    res.writeHead(308, { Location: clean + url.search });
+    res.end();
+    console.log('308 ' + url.pathname + ' -> ' + clean);
+    return;
+  }
+
   const target = resolvePath(url.pathname);
   const file = locate(target);
 
   if (!file) {
+    // Serve the real 404 page, exactly as Pages does.
+    const notFound = path.join(SITE, '404.html');
     res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(
-      '<h1>404</h1><p>No file for <code>' +
-        url.pathname +
-        '</code> (resolved to <code>' +
-        target +
-        '</code>)</p><p><a href="/">home</a> · <a href="/catalog">catalog</a></p>'
-    );
-    console.log('404 ' + url.pathname);
+    res.end(fs.existsSync(notFound) ? fs.readFileSync(notFound) : '<h1>404</h1>');
+    console.log('404 ' + url.pathname + ' (resolved to ' + target + ')');
     return;
   }
 
@@ -135,8 +128,8 @@ server.listen(PORT, () => {
   console.log('  /                                       home');
   console.log('  /catalog                                curriculum');
   console.log('  /about                                  method and credits');
-  console.log('  /lesson?id=01-foundations/03-consistent-hashing');
+  console.log('  /lesson?id=03-data-storage/08-consistent-hashing');
   console.log('  /llms.txt                               agent-readable map\n');
-  console.log('  Routing is read from vercel.json, so these are the production URLs.');
+  console.log('  Routing mirrors Cloudflare Pages, so these are the production URLs.');
   console.log('  Ctrl-C to stop.\n');
 });

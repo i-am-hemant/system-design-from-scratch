@@ -34,10 +34,10 @@ python3 scripts/audit_lessons.py --run-tests
 node scripts/serve.js        # preview at http://localhost:8080
 ```
 
-Use `scripts/serve.js` rather than `python3 -m http.server`. It reads the routing
-out of `vercel.json`, so `/catalog` and `/lesson?id=...` resolve exactly as they do
-in production; a plain static server 404s on those and hides routing bugs until
-deploy.
+Use `scripts/serve.js` rather than `python3 -m http.server`. It mirrors Cloudflare
+Pages routing — extensionless URLs, `/about.html` redirecting to `/about`, and a
+real `404.html` — so `/catalog` and `/lesson?id=...` resolve exactly as they do in
+production; a plain static server 404s on those and hides routing bugs until deploy.
 
 Write the code before the prose. The lesson's hook should be a number you were mildly surprised
 by; you can't know what that is until you've run it.

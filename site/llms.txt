@@ -22,7 +22,7 @@ The vocabulary and the arithmetic. What the properties mean, what they cost, and
 - Functional versus Non-Functional Requirements (design) — planned, not yet written
 - Back-of-Envelope Calculations (concept) — planned, not yet written
 - The 4-Step Design Framework (design) — planned, not yet written
-- [Vertical and Horizontal Scaling](https://systemdesignfromscratch.com/lesson?id=01-foundations/04-scalability) (concept)
+- [Vertical and Horizontal Scaling](https://sysdesign.hemantfaujdar.com/lesson?id=01-foundations/04-scalability) (concept)
   In 1986 a CPU doubled in speed every 1.7 years. Since 2015 it takes 20.1. Waiting for faster hardware stopped being an engineering strategy inside one career.
 - Load Balancing: Round Robin to Power of Two Choices (concept) — planned, not yet written
 - Caching Strategies and Eviction (concept) — planned, not yet written
@@ -53,7 +53,7 @@ Where state lives, how it survives a crash, and what you give up to make it fast
 - Partitioning and Rebalancing (concept) — planned, not yet written
 - Transactions and Isolation Levels (concept) — planned, not yet written
 - Choosing a Datastore (design) — planned, not yet written
-- [Consistent Hashing](https://systemdesignfromscratch.com/lesson?id=03-data-storage/08-consistent-hashing) (concept)
+- [Consistent Hashing](https://sysdesign.hemantfaujdar.com/lesson?id=03-data-storage/08-consistent-hashing) (concept)
   Adding one server to a modulo-hashed cache moves 81% of your keys. A hash ring moves 20%. Same hardware, same request, one line of different arithmetic.
 
 ### Distributed Systems

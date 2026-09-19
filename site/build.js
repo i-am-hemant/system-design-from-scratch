@@ -27,7 +27,7 @@ const REPO = path.resolve(__dirname, '..');
 const PHASES_DIR = path.join(REPO, 'phases');
 const CURRICULUM_PATH = path.join(REPO, 'curriculum.json');
 const SITE = __dirname;
-const SITE_URL = 'https://systemdesignfromscratch.com';
+const SITE_URL = 'https://sysdesign.hemantfaujdar.com';
 
 // --- helpers ---------------------------------------------------------------
 
